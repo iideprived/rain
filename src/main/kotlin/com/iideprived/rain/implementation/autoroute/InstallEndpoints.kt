@@ -1,0 +1,122 @@
+package com.iideprived.rain.implementation.autoroute
+
+import com.iideprived.rain.annotations.*
+import com.iideprived.rain.annotations.HttpMethod
+import com.iideprived.rain.exceptions.RouteMethodMultipleHttpMethodAnnotationException
+import com.iideprived.rain.exceptions.RouteMethodReturnTypeException
+import com.iideprived.rain.exceptions.RouteParameterAnnotationMissingException
+import com.iideprived.rain.exceptions.RouteParameterMultipleAnnotationException
+import com.iideprived.rain.model.response.BaseResponse
+import com.iideprived.rain.util.*
+import com.iideprived.rain.util.scanResult
+import io.github.classgraph.AnnotationInfo
+import io.github.classgraph.ClassInfo
+import io.github.classgraph.MethodInfo
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
+import io.ktor.server.application.*
+import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonBuilder
+import kotlin.reflect.full.createInstance
+
+@OptIn(ExperimentalSerializationApi::class)
+fun Application.installServiceAnnotatedRoutes(jsonBuilder: JsonBuilder.() -> Unit = {
+    prettyPrint = false
+    isLenient = true
+    ignoreUnknownKeys = true
+    encodeDefaults = true
+    explicitNulls = false
+}) {
+    install(ContentNegotiation){
+        json(Json {
+            jsonBuilder.invoke(this)
+        })
+    }
+    routing {
+        scanResult.getClassesWithAnnotation(Service::class.qualifiedName).forEach { classInfo ->
+            val servicePath = classInfo.annotationInfo.firstOrNull()?.parameterValues?.firstOrNull()?.value.toString()
+            route(servicePath, classInfo.installEndpoints())
+        }
+    }
+}
+
+private fun AnnotationInfo.getValue(): String = this.parameterValues.firstOrNull()?.value.toString()
+
+private fun ClassInfo.installEndpoints() : (Route.() -> Unit) = {
+    val classInstance = loadClass().kotlin.createInstance()
+    methodInfo.forEach findingMethods@{ methodInfo ->
+        if (!methodInfo.returnsBaseResponse()) {
+            throw RouteMethodReturnTypeException(methodInfo)
+        }
+
+        val annotationInfos = methodInfo.annotationInfo.filter { annotation ->
+            annotation.classInfo.annotations.any { it.name == HttpMethod::class.qualifiedName }
+        }
+        if (annotationInfos.isEmpty()) return@findingMethods
+        if (annotationInfos.size > 1) {
+            throw RouteMethodMultipleHttpMethodAnnotationException(methodInfo)
+        }
+
+        val annotationInfo = annotationInfos.first()
+
+        when (annotationInfo.classInfo.simpleName) {
+            Get::class.simpleName -> {
+                get(annotationInfo.getValue(), getRouteFunction(classInstance, methodInfo))
+            }
+            Post::class.simpleName -> {
+                post(annotationInfo.getValue(), getRouteFunction(classInstance, methodInfo))
+            }
+            Put::class.simpleName -> {
+                put(annotationInfo.getValue(), getRouteFunction(classInstance, methodInfo))
+            }
+            Delete::class.simpleName -> {
+                delete(annotationInfo.getValue(), getRouteFunction(classInstance, methodInfo))
+            }
+            Patch::class.simpleName -> {
+                patch(annotationInfo.getValue(), getRouteFunction(classInstance, methodInfo))
+            }
+            Options::class.simpleName -> {
+                options(annotationInfo.getValue(), getRouteFunction(classInstance, methodInfo))
+            }
+            Head::class.simpleName -> {
+                head(annotationInfo.getValue(), getRouteFunction(classInstance, methodInfo))
+            }
+        }
+    }
+}
+
+private fun getRouteFunction(classInstance: Any, methodInfo: MethodInfo) : (suspend RoutingContext.() -> Unit ) = {
+    val paramValues = methodInfo.parameterInfo.map { param ->
+        val paramAnnotations = param.annotationInfo.filter { paramAnnotation ->
+            paramAnnotation.classInfo.annotations.any { it.name == RequestParameter::class.qualifiedName }
+        }
+        if (paramAnnotations.size > 1){
+            throw RouteParameterMultipleAnnotationException(methodInfo, param)
+        }
+        if (paramAnnotations.isEmpty()) {
+            throw RouteParameterAnnotationMissingException(methodInfo, param)
+        }
+
+        val paramType = paramAnnotations.first()
+
+        return@map when (paramType.classInfo?.simpleName) {
+            Path::class.simpleName -> call.pathParameters[paramType.getValue()]?.convertByString(param.simpleType())
+            Body::class.simpleName -> call.receive(param.toKClass())
+            Query::class.simpleName -> call.queryParameters[paramType.getValue()]?.convertByString(param.simpleType())
+            Header::class.simpleName -> call.request.headers[paramType.getValue()]?.convertByString(param.simpleType())
+            else -> throw RouteParameterAnnotationMissingException(methodInfo, param)
+        }
+    }.toTypedArray()
+
+    try {
+        call.respond(methodInfo.loadClassAndGetMethod().invoke(classInstance, *paramValues))
+    } catch (e: Exception){
+        // TODO: Try to match an exception type to a global exception handler
+        call.respond(BaseResponse.failure(e))
+    }
+}
