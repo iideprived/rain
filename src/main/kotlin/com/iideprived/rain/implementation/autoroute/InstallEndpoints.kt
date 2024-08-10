@@ -19,10 +19,12 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.util.reflect.*
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonBuilder
 import kotlin.reflect.full.createInstance
+import kotlin.reflect.full.defaultType
 
 @OptIn(ExperimentalSerializationApi::class)
 fun Application.installServiceAnnotatedRoutes(jsonBuilder: JsonBuilder.() -> Unit = {
@@ -104,13 +106,24 @@ private fun getRouteFunction(classInstance: Any, methodInfo: MethodInfo) : (susp
 
         val paramType = paramAnnotations.first()
 
-        return@map when (paramType.classInfo?.simpleName) {
-            Path::class.simpleName -> call.pathParameters[paramType.getValue()]?.convertByString(param.simpleType())
-            Body::class.simpleName -> call.receive(param.toKClass())
-            Query::class.simpleName -> call.queryParameters[paramType.getValue()]?.convertByString(param.simpleType())
-            Header::class.simpleName -> call.request.headers[paramType.getValue()]?.convertByString(param.simpleType())
-            else -> throw RouteParameterAnnotationMissingException(methodInfo, param)
+        val obj: Any?;
+        try {
+            obj = when (paramType.classInfo?.simpleName) {
+                Path::class.simpleName -> call.pathParameters[paramType.getValue()]?.convertByString(param.simpleType())
+                Body::class.simpleName -> call.receiveNullable(TypeInfo(param.toKClass(), param.toType(), param.toKType()))
+                Query::class.simpleName -> call.queryParameters[paramType.getValue()]?.convertByString(param.simpleType())
+                Header::class.simpleName -> call.request.headers[paramType.getValue()]?.convertByString(param.simpleType())
+                else -> throw RouteParameterAnnotationMissingException(methodInfo, param)
+            }
+        } catch (e: RouteParameterAnnotationMissingException){
+            call.respond(BaseResponse.failure(e))
         }
+        catch (e: Exception){
+            call.respond(BaseResponse.failure(e))
+            return@map
+        }
+
+        return@map
     }.toTypedArray()
 
     try {

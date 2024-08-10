@@ -4,10 +4,13 @@ import com.iideprived.rain.model.response.BaseResponse
 import io.github.classgraph.MethodInfo
 import io.github.classgraph.MethodParameterInfo
 import io.github.classgraph.TypeSignature
+import io.ktor.util.reflect.*
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.regex.Pattern
 import kotlin.reflect.KClass
+import kotlin.reflect.KType
+import kotlin.reflect.full.createType
 
 // Utility function to convert path parameter to the specified type
 internal fun String?.convertByString(typeName: String): Any? {
@@ -61,6 +64,15 @@ internal fun String.toKClass(): KClass<*>? {
 
 internal fun MethodParameterInfo.toKClass(): KClass<*> {
     return this.qualifiedType().toKClass() ?: Any::class
+}
+
+internal fun MethodParameterInfo.toType(): Type {
+    return scanResult.loadClass(this.qualifiedType(), false)
+}
+
+internal fun MethodParameterInfo.toKType(): KType {
+    val kClass = this.toKClass()
+    return kClass.createType(nullable = true)
 }
 
 internal fun String.isPrimitiveType(): Boolean = when (this) {
