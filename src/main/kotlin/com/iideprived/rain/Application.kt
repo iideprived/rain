@@ -10,7 +10,7 @@ internal fun main(args: Array<String>) {
 
 @OptIn(ExperimentalSerializationApi::class)
 internal fun Application.module() {
-    installServiceAnnotatedRoutes(){
+    installServiceAnnotatedRoutes {
         prettyPrint = true
         isLenient = true
         ignoreUnknownKeys = true
