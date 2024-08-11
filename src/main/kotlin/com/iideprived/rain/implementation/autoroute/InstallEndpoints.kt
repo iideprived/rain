@@ -1,18 +1,15 @@
 package com.iideprived.rain.implementation.autoroute
 
 import com.iideprived.rain.annotations.*
-import com.iideprived.rain.annotations.HttpMethod
 import com.iideprived.rain.exceptions.RouteMethodMultipleHttpMethodAnnotationException
 import com.iideprived.rain.exceptions.RouteMethodReturnTypeException
 import com.iideprived.rain.exceptions.RouteParameterAnnotationMissingException
 import com.iideprived.rain.exceptions.RouteParameterMultipleAnnotationException
 import com.iideprived.rain.model.response.BaseResponse
 import com.iideprived.rain.util.*
-import com.iideprived.rain.util.scanResult
 import io.github.classgraph.AnnotationInfo
 import io.github.classgraph.ClassInfo
 import io.github.classgraph.MethodInfo
-import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.contentnegotiation.*
@@ -91,7 +88,7 @@ private fun ClassInfo.installEndpoints() : (Route.() -> Unit) = {
 }
 
 private fun getRouteFunction(classInstance: Any, methodInfo: MethodInfo) : (suspend RoutingContext.() -> Unit ) = {
-    val paramValues = methodInfo.parameterInfo.map { param ->
+    val paramValues = methodInfo.parameterInfo.mapNotNull { param ->
         val paramAnnotations = param.annotationInfo.filter { paramAnnotation ->
             paramAnnotation.classInfo.annotations.any { it.name == RequestParameter::class.qualifiedName }
         }
@@ -104,19 +101,35 @@ private fun getRouteFunction(classInstance: Any, methodInfo: MethodInfo) : (susp
 
         val paramType = paramAnnotations.first()
 
-        return@map when (paramType.classInfo?.simpleName) {
-            Path::class.simpleName -> call.pathParameters[paramType.getValue()]?.convertByString(param.simpleType())
-            Body::class.simpleName -> call.receive(param.toKClass())
-            Query::class.simpleName -> call.queryParameters[paramType.getValue()]?.convertByString(param.simpleType())
-            Header::class.simpleName -> call.request.headers[paramType.getValue()]?.convertByString(param.simpleType())
-            else -> throw RouteParameterAnnotationMissingException(methodInfo, param)
+        var obj: Any? = null
+        try {
+            obj = when (paramType.classInfo?.simpleName) {
+                Path::class.simpleName -> call.pathParameters[paramType.getValue()]?.convertByString(param.simpleType())
+                Body::class.simpleName -> call.receive(param.toKClass())
+                Query::class.simpleName -> call.queryParameters[paramType.getValue()]?.convertByString(param.simpleType())
+                Header::class.simpleName -> call.request.headers[paramType.getValue()]?.convertByString(param.simpleType())
+                else -> throw RouteParameterAnnotationMissingException(methodInfo, param)
+            }
+        } catch (e: RouteParameterAnnotationMissingException){
+            call.respond(BaseResponse.failure(e))
         }
+        catch (e: Exception){
+            e.printStackTrace()
+            call.respond(BaseResponse.failure(e))
+        }
+
+        return@mapNotNull obj
     }.toTypedArray()
 
-    try {
-        call.respond(methodInfo.loadClassAndGetMethod().invoke(classInstance, *paramValues))
-    } catch (e: Exception){
-        // TODO: Try to match an exception type to a global exception handler
-        call.respond(BaseResponse.failure(e))
+    if (paramValues.size != methodInfo.parameterInfo.size){
+        call.respond(BaseResponse.failure(Exception("Failed to parse parameters")))
+    } else {
+        try {
+            call.respond(methodInfo.loadClassAndGetMethod().invoke(classInstance, *paramValues))
+        } catch (e: Exception){
+            e.printStackTrace()
+            // TODO: Try to match an exception type to a global exception handler
+            call.respond(BaseResponse.failure(e))
+        }
     }
 }
