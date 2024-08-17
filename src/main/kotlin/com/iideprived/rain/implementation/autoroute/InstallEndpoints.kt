@@ -1,10 +1,7 @@
 package com.iideprived.rain.implementation.autoroute
 
 import com.iideprived.rain.annotations.*
-import com.iideprived.rain.exceptions.RouteMethodMultipleHttpMethodAnnotationException
-import com.iideprived.rain.exceptions.RouteMethodReturnTypeException
-import com.iideprived.rain.exceptions.RouteParameterAnnotationMissingException
-import com.iideprived.rain.exceptions.RouteParameterMultipleAnnotationException
+import com.iideprived.rain.exceptions.*
 import com.iideprived.rain.model.response.BaseResponse
 import com.iideprived.rain.util.*
 import io.github.classgraph.AnnotationInfo
@@ -127,9 +124,12 @@ private fun getRouteFunction(classInstance: Any, methodInfo: MethodInfo) : (susp
         try {
             call.respond(methodInfo.loadClassAndGetMethod().invoke(classInstance, *paramValues))
         } catch (e: Exception){
-            e.printStackTrace()
-            // TODO: Try to match an exception type to a global exception handler
-            call.respond(BaseResponse.failure(e))
+            call.respond(when {
+                e is ErrorCodeException && e is StatusCodeException -> BaseResponse.failure(e, e.errorCode, e.statusCode)
+                e is ErrorCodeException -> BaseResponse.failure(e, e.errorCode)
+                e is StatusCodeException -> BaseResponse.failure(e, statusCode = e.statusCode)
+                else -> BaseResponse.failure(e)
+            })
         }
     }
 }

@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "com.iideprived.rain"
-version = "1.1.0"
+version = "1.2.0"
 
 application {
     mainClass.set("io.ktor.server.netty.EngineMain")
