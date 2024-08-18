@@ -109,11 +109,11 @@ private fun getRouteFunction(classInstance: Any, methodInfo: MethodInfo) : (susp
                 else -> throw RouteParameterAnnotationMissingException(methodInfo, param)
             }
         } catch (e: RouteParameterAnnotationMissingException){
-            call.respond(BaseResponse.failure(e) as GenericResponse)
+            call.respond(BaseResponse.failure<GenericResponse>(e))
         }
         catch (e: Exception){
             e.printStackTrace()
-            call.respond(BaseResponse.failure(e) as GenericResponse)
+            call.respond(BaseResponse.failure<GenericResponse>(e))
         }
 
         return@mapNotNull obj
