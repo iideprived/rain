@@ -3,6 +3,7 @@ package com.iideprived.rain.implementation.autoroute
 import com.iideprived.rain.annotations.*
 import com.iideprived.rain.exceptions.*
 import com.iideprived.rain.model.response.BaseResponse
+import com.iideprived.rain.model.response.GenericResponse
 import com.iideprived.rain.util.*
 import io.github.classgraph.AnnotationInfo
 import io.github.classgraph.ClassInfo
@@ -108,28 +109,27 @@ private fun getRouteFunction(classInstance: Any, methodInfo: MethodInfo) : (susp
                 else -> throw RouteParameterAnnotationMissingException(methodInfo, param)
             }
         } catch (e: RouteParameterAnnotationMissingException){
-            call.respond(BaseResponse.failure(e))
+            call.respond(BaseResponse.failure(e) as GenericResponse)
         }
         catch (e: Exception){
             e.printStackTrace()
-            call.respond(BaseResponse.failure(e))
+            call.respond(BaseResponse.failure(e) as GenericResponse)
         }
 
         return@mapNotNull obj
     }.toTypedArray()
 
-    if (paramValues.size != methodInfo.parameterInfo.size){
-        call.respond(BaseResponse.failure(Exception("Failed to parse parameters")))
-    } else {
-        try {
-            call.respond(methodInfo.loadClassAndGetMethod().invoke(classInstance, *paramValues))
-        } catch (e: Exception){
-            call.respond(when {
-                e is ErrorCodeException && e is StatusCodeException -> BaseResponse.failure(e, e.errorCode, e.statusCode)
-                e is ErrorCodeException -> BaseResponse.failure(e, e.errorCode)
-                e is StatusCodeException -> BaseResponse.failure(e, statusCode = e.statusCode)
-                else -> BaseResponse.failure(e)
-            })
+    val response: Any = try {
+        methodInfo.loadClassAndGetMethod().invoke(classInstance, *paramValues)
+    } catch (e: Exception){
+        when {
+            e is ErrorCodeException && e is StatusCodeException -> BaseResponse.failure<GenericResponse>(e, e.errorCode, e.statusCode)
+            e is ErrorCodeException -> BaseResponse.failure<GenericResponse>(e, e.errorCode)
+            e is StatusCodeException -> BaseResponse.failure<GenericResponse>(e, statusCode = e.statusCode)
+            else -> BaseResponse.failure<GenericResponse>(e)
         }
     }
+    call.respond(response)
+
 }
+

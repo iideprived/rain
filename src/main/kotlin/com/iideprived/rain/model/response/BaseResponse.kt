@@ -45,16 +45,13 @@ abstract class BaseResponse<T : BaseResponse<T>> {
         const val DEFAULT_FAILURE_STATUS_MESSAGE: String = "failure"
         const val DEFAULT_SUCCESS_STATUS_MESSAGE: String = "success"
         const val DEFAULT_ERROR_CODE: String = "ERR-01"
+
         // Static Methods
 
-        @Suppress("unused")
-        fun success(): GenericResponse = success(GenericResponse::class.java)
-        fun failure(e: Exception, errorCode: String? = DEFAULT_ERROR_CODE, statusCode: Int = DEFAULT_FAILURE_STATUS_CODE): GenericResponse = failure(e, GenericResponse::class.java, errorCode, statusCode)
-
-        fun <T : BaseResponse<T>> success(clazz: Class<T>): T {
+        inline fun <reified T : BaseResponse<T>> createInstance() : T {
+            val clazz = T::class.java
             return try {
-                val instance = clazz.getDeclaredConstructor().newInstance()
-                instance.asSuccess()
+                clazz.getDeclaredConstructor().newInstance()
             } catch (e: InstantiationException) {
                 throw RuntimeException("Failed to create instance of ${clazz.simpleName}", e)
             } catch (e: IllegalAccessException) {
@@ -66,19 +63,13 @@ abstract class BaseResponse<T : BaseResponse<T>> {
             }
         }
 
-        fun <T : BaseResponse<T>> failure(e: Exception, clazz: Class<T>, errorCode: String? = DEFAULT_ERROR_CODE, statusCode: Int = DEFAULT_FAILURE_STATUS_CODE): T {
-            return try {
-                val instance = clazz.getDeclaredConstructor().newInstance()
-                instance.asFailure(e, errorCode, statusCode)
-            } catch (e: InstantiationException) {
-                throw RuntimeException("Failed to create instance of ${clazz.simpleName}", e)
-            } catch (e: IllegalAccessException) {
-                throw RuntimeException("Failed to access constructor of ${clazz.simpleName}", e)
-            } catch (e: InvocationTargetException) {
-                throw RuntimeException("Constructor threw an exception for ${clazz.simpleName}", e)
-            } catch (e: NoSuchMethodException) {
-                throw RuntimeException("No suitable constructor found for ${clazz.simpleName}", e)
-            }
+        @Suppress("unused")
+        inline fun <reified T : BaseResponse<T>> success(): T {
+            return createInstance<T>().asSuccess()
+        }
+
+        inline fun <reified T : BaseResponse<T>> failure(e: Exception, errorCode: String? = DEFAULT_ERROR_CODE, statusCode: Int = DEFAULT_FAILURE_STATUS_CODE): T {
+            return createInstance<T>().asFailure(e, errorCode, statusCode)
         }
     }
 }
