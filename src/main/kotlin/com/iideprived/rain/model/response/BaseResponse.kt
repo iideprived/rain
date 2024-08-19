@@ -9,11 +9,16 @@ import java.time.format.DateTimeFormatter
 abstract class BaseResponse<T : BaseResponse<T>> {
 
     // Properties
-    private val timestamp: String = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-    private var statusCode: Int = 0
-    private var statusMessage: String? = null
-    private var errorCode: String? = null
-    private var errorMessage: String? = null
+    val timestamp: String = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+    var statusCode: Int = 0
+        private set
+    var statusMessage: String? = null
+        private set
+    var errorCode: String? = null
+        private set
+    var errorMessage: String? = null
+        private set
+
 
     init {
         this.asSuccess()
