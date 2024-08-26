@@ -14,6 +14,7 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.util.pipeline.*
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonBuilder
@@ -87,7 +88,7 @@ private fun ClassInfo.installEndpoints(createInstance: ClassInfo.() -> Any) : (R
     }
 }
 
-private fun getRouteFunction(classInstance: Any, methodInfo: MethodInfo) : (suspend RoutingContext.() -> Unit ) = {
+private fun getRouteFunction(classInstance: Any, methodInfo: MethodInfo) : (suspend PipelineContext<Unit, ApplicationCall>.(Unit) -> Unit ) = {
     val paramValues = methodInfo.parameterInfo.mapNotNull { param ->
         val paramAnnotations = param.annotationInfo.filter { paramAnnotation ->
             paramAnnotation.classInfo.annotations.any { it.name == RequestParameter::class.qualifiedName }
@@ -104,9 +105,9 @@ private fun getRouteFunction(classInstance: Any, methodInfo: MethodInfo) : (susp
         var obj: Any? = null
         try {
             obj = when (paramType.classInfo?.simpleName) {
-                Path::class.simpleName -> call.pathParameters[paramType.getValue()]?.convertByString(param.simpleType())
+                Path::class.simpleName -> call.parameters[paramType.getValue()]?.convertByString(param.simpleType())
                 Body::class.simpleName -> call.receive(param.toKClass())
-                Query::class.simpleName -> call.queryParameters[paramType.getValue()]?.convertByString(param.simpleType())
+                Query::class.simpleName -> call.parameters[paramType.getValue()]?.convertByString(param.simpleType())
                 Header::class.simpleName -> call.request.headers[paramType.getValue()]?.convertByString(param.simpleType())
                 else -> throw RouteParameterAnnotationMissingException(methodInfo, param)
             }
