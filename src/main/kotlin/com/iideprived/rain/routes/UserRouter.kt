@@ -13,7 +13,7 @@ import com.iideprived.rain.service.impl.UserServiceImpl
 internal class UserRouter(private val userService: UserService = UserServiceImpl()) {
 
     @Get
-    internal fun getAllUsers() = GetAllUsersResponse(userService.getAllUsers())
+    internal fun getAllUsers(): GetAllUsersResponse = GetAllUsersResponse(userService.getAllUsers())
 
     @Get("/{id}")
     internal fun getUserById(@Path("id") id: Int) = when (val user = userService.getUserById(id)) {
