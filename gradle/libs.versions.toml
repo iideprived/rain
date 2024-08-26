@@ -1,6 +1,6 @@
 
 [versions]
-ktor-version = "3.0.0-beta-1"
+ktor-version = "2.3.12"
 kotlin-version = "2.0.10"
 logback-version = "1.4.14"
 
