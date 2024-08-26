@@ -26,24 +26,26 @@ fun Application.installServiceAnnotatedRoutes(jsonBuilder: JsonBuilder.() -> Uni
     ignoreUnknownKeys = true
     encodeDefaults = true
     explicitNulls = false
-}) {
+}, createInstance: (ClassInfo.() -> Any) = { loadClass().kotlin.createInstance() }) {
     install(ContentNegotiation){
         json(Json {
             jsonBuilder.invoke(this)
         })
     }
     routing {
-        scanResult.getClassesWithAnnotation(Service::class.qualifiedName).forEach { classInfo ->
-            val servicePath = classInfo.annotationInfo.firstOrNull()?.parameterValues?.firstOrNull()?.value.toString()
-            route(servicePath, classInfo.installEndpoints())
-        }
+        scanResult.getClassesWithAnnotation(Service::class.qualifiedName)
+            .filter { classInfo -> !classInfo.packageName.startsWith("com.iideprived.rain") }
+            .forEach { classInfo ->
+                val servicePath = classInfo.annotationInfo.firstOrNull()?.parameterValues?.firstOrNull()?.value.toString()
+                route(servicePath, classInfo.installEndpoints(createInstance))
+            }
     }
 }
 
 private fun AnnotationInfo.getValue(): String = this.parameterValues.firstOrNull()?.value.toString()
 
-private fun ClassInfo.installEndpoints() : (Route.() -> Unit) = {
-    val classInstance = loadClass().kotlin.createInstance()
+private fun ClassInfo.installEndpoints(createInstance: ClassInfo.() -> Any) : (Route.() -> Unit) = {
+    val classInstance = createInstance()
     methodInfo.forEach findingMethods@{ methodInfo ->
         if (!methodInfo.returnsBaseResponse()) {
             throw RouteMethodReturnTypeException(methodInfo)
