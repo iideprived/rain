@@ -1,6 +1,7 @@
 package com.iideprived.rain.implementation.autoroute
 
 import com.iideprived.rain.annotations.*
+import com.iideprived.rain.annotations.HttpMethod
 import com.iideprived.rain.exceptions.*
 import com.iideprived.rain.model.response.BaseResponse
 import com.iideprived.rain.model.response.GenericResponse
@@ -8,6 +9,8 @@ import com.iideprived.rain.util.*
 import io.github.classgraph.AnnotationInfo
 import io.github.classgraph.ClassInfo
 import io.github.classgraph.MethodInfo
+import io.github.classgraph.MethodParameterInfo
+import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.contentnegotiation.*
@@ -89,7 +92,8 @@ private fun ClassInfo.installEndpoints(createInstance: ClassInfo.() -> Any) : (R
 }
 
 private fun getRouteFunction(classInstance: Any, methodInfo: MethodInfo) : (suspend PipelineContext<Unit, ApplicationCall>.(Unit) -> Unit ) = {
-    val paramValues = methodInfo.parameterInfo.mapNotNull { param ->
+    val missingParameters: MutableList<MethodParameterInfo> = mutableListOf()
+    val paramValues = methodInfo.parameterInfo.map { param ->
         val paramAnnotations = param.annotationInfo.filter { paramAnnotation ->
             paramAnnotation.classInfo.annotations.any { it.name == RequestParameter::class.qualifiedName }
         }
@@ -106,33 +110,47 @@ private fun getRouteFunction(classInstance: Any, methodInfo: MethodInfo) : (susp
         try {
             obj = when (paramType.classInfo?.simpleName) {
                 Path::class.simpleName -> call.parameters[paramType.getValue()]?.convertByString(param.simpleType())
-                Body::class.simpleName -> call.receive(param.toKClass())
-                Query::class.simpleName -> call.parameters[paramType.getValue()]?.convertByString(param.simpleType())
+                Body::class.simpleName  -> call.receive(param.toKClass())
+                Query::class.simpleName -> call.request.queryParameters[paramType.getValue()]?.convertByString(param.simpleType())
                 Header::class.simpleName -> call.request.headers[paramType.getValue()]?.convertByString(param.simpleType())
                 else -> throw RouteParameterAnnotationMissingException(methodInfo, param)
             }
         } catch (e: RouteParameterAnnotationMissingException){
             call.respond(BaseResponse.failure<GenericResponse>(e))
         }
-        catch (e: Exception){
+        catch (e: Exception) {
             e.printStackTrace()
             call.respond(BaseResponse.failure<GenericResponse>(e))
         }
 
-        return@mapNotNull obj
+        if (!param.isNullable() && obj == null){
+            missingParameters.add(param)
+        }
+
+        return@map obj
     }.toTypedArray()
 
-    val response: Any = try {
-        methodInfo.loadClassAndGetMethod().invoke(classInstance, *paramValues)
+    if (missingParameters.isNotEmpty()){
+        call.respond(BaseResponse.failure<GenericResponse>(RouteParameterMissingException(methodInfo, missingParameters)))
+    }
+
+    val response: BaseResponse = try {
+        methodInfo.loadClassAndGetMethod().invoke(classInstance, *paramValues) as BaseResponse
     } catch (e: Exception){
         when {
             e is ErrorCodeException && e is StatusCodeException -> BaseResponse.failure<GenericResponse>(e, e.errorCode, e.statusCode)
             e is ErrorCodeException -> BaseResponse.failure<GenericResponse>(e, e.errorCode)
             e is StatusCodeException -> BaseResponse.failure<GenericResponse>(e, statusCode = e.statusCode)
-            else -> BaseResponse.failure<GenericResponse>(e)
+            else -> {
+                when (e.message){
+                    "wrong number of arguments" -> {
+                        println("Method: ${methodInfo.name} has the wrong number of arguments. Expected: ${methodInfo.parameterInfo.size}, Actual: ${paramValues.size}")
+                    }
+                }
+                BaseResponse.failure<GenericResponse>(e)
+            }
         }
     }
-    call.respond(response)
-
+    call.respond(HttpStatusCode.fromValue(response.statusCode), response)
 }
 

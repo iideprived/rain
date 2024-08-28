@@ -1,3 +1,5 @@
+val koin: String by project
+
 
 plugins {
     id("maven-publish")
@@ -7,7 +9,7 @@ plugins {
 }
 
 group = "com.iideprived.rain"
-version = "1.3.2"
+version = "1.3.4"
 
 application {
     mainClass.set("io.ktor.server.netty.EngineMain")
@@ -21,12 +23,15 @@ repositories {
 }
 
 dependencies {
-    implementation(libs.ktor.server.content.negotiation)
-    implementation(libs.ktor.server.core)
-    implementation(libs.ktor.serialization.kotlinx.json)
-    implementation(libs.ktor.server.netty)
-    implementation(libs.logback.classic)
-    implementation(libs.ktor.server.config.yaml)
+    implementation("ch.qos.logback:logback-classic:1.4.12")
+    // Ktor
+    implementation("io.ktor:ktor-server-core-jvm:$ktor")
+    implementation("io.ktor:ktor-server-cors-jvm:$ktor")
+    implementation("io.ktor:ktor-server-netty-jvm:$ktor")
+    implementation("io.ktor:ktor-server-config-yaml:$ktor")
+    implementation("io.ktor:ktor-server-resources-jvm:$ktor")
+    implementation("io.ktor:ktor-serialization-kotlinx-json-jvm:$ktor")
+    implementation("io.ktor:ktor-server-content-negotiation-jvm:$ktor")
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
 

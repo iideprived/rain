@@ -11,24 +11,25 @@ import java.util.regex.Pattern
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.full.createType
+import kotlin.reflect.full.isSubtypeOf
 
 // Utility function to convert path parameter to the specified type
 internal fun String?.convertByString(typeName: String): Any? {
     return try {
         when (typeName) {
             String::class.qualifiedName, String::class.simpleName -> this
-            Int::class.qualifiedName, Int::class.simpleName -> this?.toInt()
-            Long::class.qualifiedName, Long::class.simpleName -> this?.toLong()
-            Double::class.qualifiedName, Double::class.simpleName -> this?.toDouble()
-            Float::class.qualifiedName, Float::class.simpleName -> this?.toFloat()
-            Boolean::class.qualifiedName, Boolean::class.simpleName -> this.toBoolean()
-            Byte::class.qualifiedName, Byte::class.simpleName -> this?.toByte()
-            Short::class.qualifiedName, Short::class.simpleName -> this?.toShort()
-            Char::class.qualifiedName, Char::class.simpleName -> this?.first()
-            UByte::class.qualifiedName, UByte::class.simpleName -> this?.toUByte()
-            UShort::class.qualifiedName, UShort::class.simpleName -> this?.toUShort()
-            UInt::class.qualifiedName, UInt::class.simpleName -> this?.toUInt()
-            ULong::class.qualifiedName, ULong::class.simpleName -> this?.toULong()
+            Int::class.qualifiedName, Int::class.simpleName, "int" -> this?.toInt()
+            Long::class.qualifiedName, Long::class.simpleName, "long" -> this?.toLong()
+            Double::class.qualifiedName, Double::class.simpleName, "double" -> this?.toDouble()
+            Float::class.qualifiedName, Float::class.simpleName, "float" -> this?.toFloat()
+            Boolean::class.qualifiedName, Boolean::class.simpleName, "boolean" -> this.toBoolean()
+            Byte::class.qualifiedName, Byte::class.simpleName, "byte" -> this?.toByte()
+            Short::class.qualifiedName, Short::class.simpleName, "short" -> this?.toShort()
+            Char::class.qualifiedName, Char::class.simpleName, "char" -> this?.first()
+            UByte::class.qualifiedName, UByte::class.simpleName, "ubyte" -> this?.toUByte()
+            UShort::class.qualifiedName, UShort::class.simpleName, "ushort" -> this?.toUShort()
+            UInt::class.qualifiedName, UInt::class.simpleName, "uint" -> this?.toUInt()
+            ULong::class.qualifiedName, ULong::class.simpleName, "ulong" -> this?.toULong()
             BigDecimal::class.qualifiedName, BigDecimal::class.simpleName -> this?.toBigDecimal()
             BigInteger::class.qualifiedName, BigInteger::class.simpleName -> this?.toBigInteger()
             Pattern::class.qualifiedName, Pattern::class.simpleName -> this?.toPattern()
@@ -47,7 +48,7 @@ internal fun MethodParameterInfo.qualifiedType() : String = this.typeSignatureOr
 internal fun String.toKClass(): KClass<*>? {
     return try {
         scanResult.loadClass(this, false).kotlin
-    } catch (e: ClassNotFoundException) {
+    } catch (e: Exception) {
         when (this) {
             Boolean::class.qualifiedName, Boolean::class.simpleName -> Boolean::class
             Char::class.qualifiedName, Char::class.simpleName -> Char::class
@@ -102,4 +103,9 @@ internal fun String.implementsInterface(clazzInterface: KClass<*>) : Boolean {
 
 internal fun MethodInfo.returnType() : TypeSignature = this.typeSignatureOrTypeDescriptor.resultType
 
-internal fun MethodInfo.returnsBaseResponse() : Boolean = returnType().toString().implementsInterface(BaseResponse::class)
+internal fun MethodInfo.returnsBaseResponse() : Boolean = returnType().toString().implementsInterface(BaseResponse::class) || returnType().toString() == BaseResponse::class.qualifiedName
+
+internal fun MethodParameterInfo.isNullable(): Boolean {
+    val type = this.toKClass().createType(nullable = true)
+    return this.toKClass().createType().isSubtypeOf(type)
+}

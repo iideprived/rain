@@ -6,7 +6,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Serializable
-abstract class BaseResponse<T : BaseResponse<T>> {
+sealed class BaseResponse {
 
     // Properties
     val timestamp: String = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
@@ -25,22 +25,20 @@ abstract class BaseResponse<T : BaseResponse<T>> {
     }
 
     // Instance Methods
-    @Suppress("UNCHECKED_CAST")
-    fun asSuccess(): T {
+    fun asSuccess(): BaseResponse {
         this.statusCode = 200
         this.statusMessage = DEFAULT_SUCCESS_STATUS_MESSAGE
         this.errorCode = null
         this.errorMessage = null
-        return this as T
+        return this
     }
 
-    @Suppress("UNCHECKED_CAST")
-    fun asFailure(e: Exception, errorCode: String? = DEFAULT_ERROR_CODE, statusCode: Int = DEFAULT_FAILURE_STATUS_CODE): T {
+    fun asFailure(e: Exception, errorCode: String? = DEFAULT_ERROR_CODE, statusCode: Int = DEFAULT_FAILURE_STATUS_CODE): BaseResponse {
         this.statusCode = statusCode
         this.statusMessage = DEFAULT_FAILURE_STATUS_MESSAGE
         this.errorCode = errorCode
         this.errorMessage = e.message
-        return this as T
+        return this
     }
 
     // Companion Object
@@ -53,7 +51,7 @@ abstract class BaseResponse<T : BaseResponse<T>> {
 
         // Static Methods
 
-        inline fun <reified T : BaseResponse<T>> createInstance() : T {
+        inline fun <reified T : BaseResponse> createInstance() : T {
             val clazz = T::class.java
             return try {
                 clazz.getDeclaredConstructor().newInstance()
@@ -69,12 +67,12 @@ abstract class BaseResponse<T : BaseResponse<T>> {
         }
 
         @Suppress("unused")
-        inline fun <reified T : BaseResponse<T>> success(): T {
-            return createInstance<T>().asSuccess()
+        inline fun <reified T : BaseResponse> success(): T {
+            return createInstance<T>().asSuccess() as T
         }
 
-        inline fun <reified T : BaseResponse<T>> failure(e: Exception, errorCode: String? = DEFAULT_ERROR_CODE, statusCode: Int = DEFAULT_FAILURE_STATUS_CODE): T {
-            return createInstance<T>().asFailure(e, errorCode, statusCode)
+        inline fun <reified T : BaseResponse> failure(e: Exception, errorCode: String? = DEFAULT_ERROR_CODE, statusCode: Int = DEFAULT_FAILURE_STATUS_CODE): T {
+            return createInstance<T>().asFailure(e, errorCode, statusCode) as T
         }
     }
 }
