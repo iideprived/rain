@@ -134,8 +134,15 @@ private fun getRouteFunction(classInstance: Any, methodInfo: MethodInfo) : (susp
         call.respond(BaseResponse.failure<GenericResponse>(RouteParameterMissingException(methodInfo, missingParameters)))
     }
 
-    val response: BaseResponse = try {
-        methodInfo.loadClassAndGetMethod().invoke(classInstance, *paramValues) as BaseResponse
+    var statusCode = 200
+    val response = try {
+        when (val result = methodInfo.loadClassAndGetMethod().invoke(classInstance, *paramValues)){
+            is BaseResponse -> {
+                statusCode = result.statusCode
+                result
+            }
+            else -> BaseResponse.failure<GenericResponse>(Exception("Method: ${methodInfo.name} must return a subclass of BaseResponse"))
+        }
     } catch (e: Exception){
         when {
             e is ErrorCodeException && e is StatusCodeException -> BaseResponse.failure<GenericResponse>(e, e.errorCode, e.statusCode)
@@ -149,8 +156,10 @@ private fun getRouteFunction(classInstance: Any, methodInfo: MethodInfo) : (susp
                 }
                 BaseResponse.failure<GenericResponse>(e)
             }
+        }.apply {
+            statusCode = this.statusCode
         }
     }
-    call.respond(HttpStatusCode.fromValue(response.statusCode), response)
+    call.respond(HttpStatusCode.fromValue(statusCode), response)
 }
 
