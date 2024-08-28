@@ -2,6 +2,7 @@ package com.iideprived.rain.exceptions
 
 import com.iideprived.rain.annotations.*
 import com.iideprived.rain.annotations.Body
+import com.iideprived.rain.util.simpleType
 import io.github.classgraph.MethodInfo
 import io.github.classgraph.MethodParameterInfo
 
@@ -40,4 +41,10 @@ internal class RouteMethodMultipleHttpMethodAnnotationException(private val meth
     override val message: String
         get() = "${methodInfo.classInfo.simpleName}.${methodInfo.name} " +
                 " cannot have multiple ${HttpMethod::class.simpleName} annotations. It has [$httpMethodAnnotations]"
+}
+
+internal class RouteParameterMissingException(private val methodInfo: MethodInfo, private val missing: List<MethodParameterInfo>) : RouteInstallationException() {
+    override val message: String
+        get() = "${methodInfo.classInfo.simpleName}.${methodInfo.name} " +
+                " is missing parameters: ${missing.joinToString { "${it.name}: ${it.simpleType()}" }}"
 }

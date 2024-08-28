@@ -2,23 +2,26 @@ package com.iideprived.rain.routes
 
 import com.iideprived.rain.annotations.*
 import com.iideprived.rain.model.User
-import com.iideprived.rain.model.response.CreateUserResponse
-import com.iideprived.rain.model.response.GetAllUsersResponse
-import com.iideprived.rain.model.response.GetUserByIdResponse
-import com.iideprived.rain.model.response.UpdateUserResponse
+import com.iideprived.rain.model.response.*
 import com.iideprived.rain.service.UserService
-import com.iideprived.rain.service.impl.UserServiceImpl
 
 @Service("/users")
-internal class UserRouter(private val userService: UserService = UserServiceImpl()) {
+internal class UserRouter(private val userService: UserService) {
 
     @Get
     internal fun getAllUsers(): GetAllUsersResponse = GetAllUsersResponse(userService.getAllUsers())
 
     @Get("/{id}")
     internal fun getUserById(@Path("id") id: Int) = when (val user = userService.getUserById(id)) {
-        null -> GetUserByIdResponse()
+        null -> GetUserByIdResponse().asFailure(Exception("User not found"), "USER_NOT_FOUND", 404)
         else -> GetUserByIdResponse(user)
+    }
+
+    @Delete("/{id}")
+    internal fun deleteUserById(@Path("id") id: Int) = if (userService.deleteUser(id)){
+        DeleteUserResponse()
+    } else {
+        DeleteUserResponse().asFailure(Exception("Failed to delete user"), "DELETE_FAILED", 403)
     }
 
     @Post

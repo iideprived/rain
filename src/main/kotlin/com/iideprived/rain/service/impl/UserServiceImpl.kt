@@ -15,8 +15,9 @@ internal class UserServiceImpl : UserService {
     }
 
     override fun createUser(user: User): User {
-        users.add(user)
-        return user
+        return user.copy(id = users.size + 1).apply {
+            users.add(this)
+        }
     }
 
     override fun updateUser(id: Int, user: User): User? {
