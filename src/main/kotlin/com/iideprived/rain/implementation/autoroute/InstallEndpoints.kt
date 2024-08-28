@@ -136,13 +136,12 @@ private fun getRouteFunction(classInstance: Any, methodInfo: MethodInfo) : (susp
 
     var statusCode = 200
     val response = try {
-        when (val result = methodInfo.loadClassAndGetMethod().invoke(classInstance, *paramValues)){
-            is BaseResponse -> {
-                statusCode = result.statusCode
-                result
-            }
-            else -> BaseResponse.failure<GenericResponse>(Exception("Method: ${methodInfo.name} must return a subclass of BaseResponse"))
+        val resultRaw = methodInfo.loadClassAndGetMethod().invoke(classInstance, *paramValues)
+        val resultTyped = resultRaw
+        if (resultTyped is BaseResponse){
+            statusCode = resultTyped.statusCode
         }
+        resultRaw
     } catch (e: Exception){
         when {
             e is ErrorCodeException && e is StatusCodeException -> BaseResponse.failure<GenericResponse>(e, e.errorCode, e.statusCode)
