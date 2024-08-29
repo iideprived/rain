@@ -5,9 +5,12 @@ import io.github.classgraph.ScanResult
 
 private var scanResultInstance: ScanResult? = null
 
-internal val scanResult get() : ScanResult {
+internal fun getScanResult(classLoader: ClassLoader): ScanResult {
     if (scanResultInstance == null) {
-        scanResultInstance = ClassGraph().enableAllInfo().scan()
+        scanResultInstance = ClassGraph()
+            .overrideClassLoaders(classLoader) // Use the provided ClassLoader
+            .enableAllInfo()
+            .scan()
     }
     return scanResultInstance!!
 }
