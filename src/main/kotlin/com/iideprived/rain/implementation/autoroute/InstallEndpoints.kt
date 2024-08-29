@@ -148,12 +148,15 @@ private fun getRouteFunction(classInstance: Any, methodInfo: MethodInfo) : (susp
             e is ErrorCodeException -> BaseResponse.failure<GenericResponse>(e, e.errorCode)
             e is StatusCodeException -> BaseResponse.failure<GenericResponse>(e, statusCode = e.statusCode)
             else -> {
-                when (e.message){
-                    "wrong number of arguments" -> {
-                        println("Method: ${methodInfo.name} has the wrong number of arguments. Expected: ${methodInfo.parameterInfo.size}, Actual: ${paramValues.size}")
+                e.printStackTrace()
+                when (e.message) {
+                    "object is not an instance of declaring class" -> {
+                        BaseResponse.failure<GenericResponse>(Exception("Failed to invoke method ${methodInfo.name} on class ${classInstance::class.qualifiedName}"), "INVOCATION_FAILED", 500)
+                    }
+                    else -> {
+                        BaseResponse.failure<GenericResponse>(e)
                     }
                 }
-                BaseResponse.failure<GenericResponse>(e)
             }
         }.apply {
             statusCode = this.statusCode
