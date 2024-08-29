@@ -38,11 +38,6 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.8.21") // Reflections
     implementation("io.github.classgraph:classgraph:4.8.162")
 
-    // Dependency Injection
-    implementation("io.insert-koin:koin-core:$koin")
-    implementation("io.insert-koin:koin-ktor:$koin")
-    implementation("io.insert-koin:koin-logger-slf4j:$koin")// SLF4J Logger
-
 }
 
 publishing {
