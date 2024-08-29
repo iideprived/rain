@@ -14,3 +14,5 @@ internal fun getScanResult(classLoader: ClassLoader): ScanResult {
     }
     return scanResultInstance!!
 }
+
+internal val scanResult: ScanResult get() = scanResultInstance ?: ClassGraph().enableAllInfo().scan().apply { scanResultInstance = this }
