@@ -39,9 +39,8 @@ fun Application.installServiceAnnotatedRoutes(
         })
     }
     routing {
-        scanResult.getClassesWithAnnotation(Service::class.qualifiedName)
-            .filter { classInfo -> !classInfo.packageName.startsWith("com.iideprived.rain") }
         getScanResult(classLoader).getClassesWithAnnotation(Service::class.qualifiedName)
+            .filter { classInfo -> !classInfo.packageName.startsWith("com.iideprived.rain") }
             .forEach { classInfo ->
                 val servicePath = classInfo.annotationInfo.firstOrNull()?.parameterValues?.firstOrNull()?.value.toString()
                 route(servicePath, classInfo.installEndpoints(createInstance))
