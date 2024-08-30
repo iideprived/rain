@@ -32,7 +32,7 @@ fun Application.installServiceAnnotatedRoutes(
     ignoreUnknownKeys = true
     encodeDefaults = true
     explicitNulls = false
-}, createInstance: (ClassInfo.() -> Any) = { loadClass().kotlin.createInstance() }) {
+}, createInstance: (Class<*>) -> Any = { it.kotlin.createInstance() }) {
     install(ContentNegotiation){
         json(Json {
             jsonBuilder.invoke(this)
@@ -43,15 +43,15 @@ fun Application.installServiceAnnotatedRoutes(
             .filter { classInfo -> !classInfo.packageName.startsWith("com.iideprived.rain") }
             .forEach { classInfo ->
                 val servicePath = classInfo.annotationInfo.firstOrNull()?.parameterValues?.firstOrNull()?.value.toString()
-                route(servicePath, classInfo.installEndpoints(createInstance))
+                route(servicePath, classInfo.installEndpoints(classLoader, createInstance))
             }
     }
 }
 
 private fun AnnotationInfo.getValue(): String = this.parameterValues.firstOrNull()?.value.toString()
 
-private fun ClassInfo.installEndpoints(createInstance: ClassInfo.() -> Any) : (Route.() -> Unit) = {
-    val classInstance = createInstance()
+private fun ClassInfo.installEndpoints(classLoader: ClassLoader, createInstance: (Class<*>) -> Any) : (Route.() -> Unit) = {
+    val classInstance = createInstance(classLoader.loadClass(this@installEndpoints.name))
     methodInfo.forEach findingMethods@{ methodInfo ->
         if (!methodInfo.returnsBaseResponse()) {
             throw RouteMethodReturnTypeException(methodInfo)
@@ -69,31 +69,31 @@ private fun ClassInfo.installEndpoints(createInstance: ClassInfo.() -> Any) : (R
 
         when (annotationInfo.classInfo.simpleName) {
             Get::class.simpleName -> {
-                get(annotationInfo.getValue(), getRouteFunction(classInstance, methodInfo))
+                get(annotationInfo.getValue(), getRouteFunction(classLoader, classInstance, methodInfo))
             }
             Post::class.simpleName -> {
-                post(annotationInfo.getValue(), getRouteFunction(classInstance, methodInfo))
+                post(annotationInfo.getValue(), getRouteFunction(classLoader, classInstance, methodInfo))
             }
             Put::class.simpleName -> {
-                put(annotationInfo.getValue(), getRouteFunction(classInstance, methodInfo))
+                put(annotationInfo.getValue(), getRouteFunction(classLoader, classInstance, methodInfo))
             }
             Delete::class.simpleName -> {
-                delete(annotationInfo.getValue(), getRouteFunction(classInstance, methodInfo))
+                delete(annotationInfo.getValue(), getRouteFunction(classLoader, classInstance, methodInfo))
             }
             Patch::class.simpleName -> {
-                patch(annotationInfo.getValue(), getRouteFunction(classInstance, methodInfo))
+                patch(annotationInfo.getValue(), getRouteFunction(classLoader, classInstance, methodInfo))
             }
             Options::class.simpleName -> {
-                options(annotationInfo.getValue(), getRouteFunction(classInstance, methodInfo))
+                options(annotationInfo.getValue(), getRouteFunction(classLoader, classInstance, methodInfo))
             }
             Head::class.simpleName -> {
-                head(annotationInfo.getValue(), getRouteFunction(classInstance, methodInfo))
+                head(annotationInfo.getValue(), getRouteFunction(classLoader, classInstance, methodInfo))
             }
         }
     }
 }
 
-private fun getRouteFunction(classInstance: Any, methodInfo: MethodInfo) : (suspend PipelineContext<Unit, ApplicationCall>.(Unit) -> Unit ) = {
+private fun getRouteFunction(classLoader: ClassLoader, classInstance: Any, methodInfo: MethodInfo) : (suspend PipelineContext<Unit, ApplicationCall>.(Unit) -> Unit ) = {
     val missingParameters: MutableList<MethodParameterInfo> = mutableListOf()
     val paramValues = methodInfo.parameterInfo.map { param ->
         val paramAnnotations = param.annotationInfo.filter { paramAnnotation ->
@@ -138,8 +138,10 @@ private fun getRouteFunction(classInstance: Any, methodInfo: MethodInfo) : (susp
 
     var statusCode = 200
     val response = try {
-        val resultRaw = methodInfo.loadClassAndGetMethod().invoke(classInstance, *paramValues)
-        val resultTyped = resultRaw
+        val declaringClass = classLoader.loadClass(methodInfo.className)
+        val method = declaringClass.getDeclaredMethod(methodInfo.name, *methodInfo.parameterInfo.map { it.qualifiedType().toKClass(classLoader)!!.java }.toTypedArray())
+        val resultRaw = method.invoke(classInstance, *paramValues)
+        val resultTyped: Any? = resultRaw
         if (resultTyped is BaseResponse){
             statusCode = resultTyped.statusCode
         }
