@@ -4,9 +4,10 @@ import com.iideprived.rain.annotations.*
 import com.iideprived.rain.model.User
 import com.iideprived.rain.model.response.*
 import com.iideprived.rain.service.UserService
+import com.iideprived.rain.service.impl.UserServiceImpl
 
 @Service("/users")
-internal class UserRouter(private val userService: UserService) {
+internal class UserRouter(private val userService: UserService = UserServiceImpl()) {
 
     @Get
     internal fun getAllUsers(): GetAllUsersResponse = GetAllUsersResponse(userService.getAllUsers())

@@ -6,7 +6,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Serializable
-sealed class BaseResponse {
+abstract class BaseResponse {
 
     // Properties
     val timestamp: String = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)

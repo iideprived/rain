@@ -136,6 +136,14 @@ private fun getRouteFunction(classLoader: ClassLoader, classInstance: Any, metho
         call.respond(BaseResponse.failure<GenericResponse>(RouteParameterMissingException(methodInfo, missingParameters)))
     }
 
+    var statusCode = 200
+    val response = try {
+        val resultRaw = methodInfo.loadClassAndGetMethod().invoke(classInstance, *paramValues)
+        val resultTyped = resultRaw
+        if (resultTyped is BaseResponse){
+            statusCode = resultTyped.statusCode
+        }
+        resultRaw
     val response: BaseResponse = try {
         val declaringClass = classLoader.loadClass(methodInfo.className)
         val method = declaringClass.getDeclaredMethod(methodInfo.name, *methodInfo.parameterInfo.map { it.qualifiedType().toKClass(classLoader)!!.java }.toTypedArray())
@@ -156,8 +164,10 @@ private fun getRouteFunction(classLoader: ClassLoader, classInstance: Any, metho
                     }
                 }
             }
+        }.apply {
+            statusCode = this.statusCode
         }
     }
-    call.respond(HttpStatusCode.fromValue(response.statusCode), response)
+    call.respond(HttpStatusCode.fromValue(statusCode), response)
 }
 
