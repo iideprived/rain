@@ -138,16 +138,14 @@ private fun getRouteFunction(classLoader: ClassLoader, classInstance: Any, metho
 
     var statusCode = 200
     val response = try {
-        val resultRaw = methodInfo.loadClassAndGetMethod().invoke(classInstance, *paramValues)
-        val resultTyped = resultRaw
+        val declaringClass = classLoader.loadClass(methodInfo.className)
+        val method = declaringClass.getDeclaredMethod(methodInfo.name, *methodInfo.parameterInfo.map { it.qualifiedType().toKClass(classLoader)!!.java }.toTypedArray())
+        val resultRaw = method.invoke(classInstance, *paramValues)
+        val resultTyped: Any? = resultRaw
         if (resultTyped is BaseResponse){
             statusCode = resultTyped.statusCode
         }
         resultRaw
-    val response: BaseResponse = try {
-        val declaringClass = classLoader.loadClass(methodInfo.className)
-        val method = declaringClass.getDeclaredMethod(methodInfo.name, *methodInfo.parameterInfo.map { it.qualifiedType().toKClass(classLoader)!!.java }.toTypedArray())
-        method.invoke(classInstance, *paramValues) as BaseResponse
     } catch (e: Exception){
         when {
             e is ErrorCodeException && e is StatusCodeException -> BaseResponse.failure<GenericResponse>(e, e.errorCode, e.statusCode)
