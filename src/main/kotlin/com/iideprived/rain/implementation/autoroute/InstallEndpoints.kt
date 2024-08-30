@@ -69,31 +69,31 @@ private fun ClassInfo.installEndpoints(classLoader: ClassLoader, createInstance:
 
         when (annotationInfo.classInfo.simpleName) {
             Get::class.simpleName -> {
-                get(annotationInfo.getValue(), getRouteFunction(classLoader, classInstance, methodInfo))
+                get(annotationInfo.getValue(), getRouteFunction(classInstance, methodInfo))
             }
             Post::class.simpleName -> {
-                post(annotationInfo.getValue(), getRouteFunction(classLoader, classInstance, methodInfo))
+                post(annotationInfo.getValue(), getRouteFunction(classInstance, methodInfo))
             }
             Put::class.simpleName -> {
-                put(annotationInfo.getValue(), getRouteFunction(classLoader, classInstance, methodInfo))
+                put(annotationInfo.getValue(), getRouteFunction(classInstance, methodInfo))
             }
             Delete::class.simpleName -> {
-                delete(annotationInfo.getValue(), getRouteFunction(classLoader, classInstance, methodInfo))
+                delete(annotationInfo.getValue(), getRouteFunction(classInstance, methodInfo))
             }
             Patch::class.simpleName -> {
-                patch(annotationInfo.getValue(), getRouteFunction(classLoader, classInstance, methodInfo))
+                patch(annotationInfo.getValue(), getRouteFunction(classInstance, methodInfo))
             }
             Options::class.simpleName -> {
-                options(annotationInfo.getValue(), getRouteFunction(classLoader, classInstance, methodInfo))
+                options(annotationInfo.getValue(), getRouteFunction(classInstance, methodInfo))
             }
             Head::class.simpleName -> {
-                head(annotationInfo.getValue(), getRouteFunction(classLoader, classInstance, methodInfo))
+                head(annotationInfo.getValue(), getRouteFunction(classInstance, methodInfo))
             }
         }
     }
 }
 
-private fun getRouteFunction(classLoader: ClassLoader, classInstance: Any, methodInfo: MethodInfo) : (suspend PipelineContext<Unit, ApplicationCall>.(Unit) -> Unit ) = {
+private fun getRouteFunction(classInstance: Any, methodInfo: MethodInfo) : (suspend PipelineContext<Unit, ApplicationCall>.(Unit) -> Unit ) = {
     val missingParameters: MutableList<MethodParameterInfo> = mutableListOf()
     val paramValues = methodInfo.parameterInfo.map { param ->
         val paramAnnotations = param.annotationInfo.filter { paramAnnotation ->
@@ -138,7 +138,8 @@ private fun getRouteFunction(classLoader: ClassLoader, classInstance: Any, metho
 
     var statusCode = 200
     val response = try {
-        val declaringClass = classLoader.loadClass(methodInfo.className)
+        val declaringClass = classInstance.javaClass
+        val classLoader = declaringClass.classLoader
         val method = declaringClass.getDeclaredMethod(methodInfo.name, *methodInfo.parameterInfo.map { it.qualifiedType().toKClass(classLoader)!!.java }.toTypedArray())
         val resultRaw = method.invoke(classInstance, *paramValues)
         val resultTyped: Any? = resultRaw
