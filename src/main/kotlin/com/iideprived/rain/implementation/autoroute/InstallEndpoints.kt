@@ -156,9 +156,17 @@ private fun getRouteFunction(classInstance: Any, methodInfo: MethodInfo) : (susp
                 e.printStackTrace()
                 when (e.message) {
                     "object is not an instance of declaring class" -> {
-                        BaseResponse.failure<GenericResponse>(Exception("Failed to invoke method ${methodInfo.name} on class ${classInstance::class.qualifiedName}"), "INVOCATION_FAILED", 500)
+                        val exception = Exception("Failed to invoke method ${methodInfo.name} on class ${classInstance::class.qualifiedName}")
+                        exception.printStackTrace()
+                        BaseResponse.failure<GenericResponse>(exception, "INVOCATION_FAILED", 500)
+                    }
+                    "argument type mismatch" -> {
+                        val exception = Exception("Failed to invoke method ${methodInfo.name} on class ${classInstance::class.qualifiedName}.\n Expected arguments ${methodInfo.parameterInfo.map { it.typeSignatureOrTypeDescriptor.toString() }} and got $paramValues")
+                        exception.printStackTrace()
+                        BaseResponse.failure<GenericResponse>(exception, "ARGUMENT_TYPE_MISMATCH", 500)
                     }
                     else -> {
+                        e.printStackTrace()
                         BaseResponse.failure<GenericResponse>(e)
                     }
                 }
