@@ -45,19 +45,21 @@ internal fun String?.convertByString(typeName: String): Any? {
 internal fun MethodParameterInfo.simpleType() : String = this.typeSignatureOrTypeDescriptor.toStringWithSimpleNames()
 internal fun MethodParameterInfo.qualifiedType() : String = this.typeSignatureOrTypeDescriptor.toString()
 
-internal fun String.toKClass(): KClass<*>? {
+internal fun String.toKClass(classLoader: ClassLoader = scanResult.javaClass.classLoader): KClass<*>? {
     return try {
-        scanResult.loadClass(this, false).kotlin
+        classLoader.loadClass(this).kotlin
     } catch (e: Exception) {
         when (this) {
-            Boolean::class.qualifiedName, Boolean::class.simpleName -> Boolean::class
-            Char::class.qualifiedName, Char::class.simpleName -> Char::class
-            Byte::class.qualifiedName, Byte::class.simpleName -> Byte::class
-            Short::class.qualifiedName, Short::class.simpleName -> Short::class
-            Int::class.qualifiedName, Int::class.simpleName -> Int::class
-            Long::class.qualifiedName, Long::class.simpleName -> Long::class
-            Float::class.qualifiedName, Float::class.simpleName -> Float::class
-            Double::class.qualifiedName, Double::class.simpleName -> Double::class
+            Boolean::class.qualifiedName, Boolean::class.simpleName, "boolean" -> Boolean::class
+            Char::class.qualifiedName, Char::class.simpleName, "char" -> Char::class
+            Byte::class.qualifiedName, Byte::class.simpleName, "byte" -> Byte::class
+            Short::class.qualifiedName, Short::class.simpleName, "short" -> Short::class
+            Int::class.qualifiedName, Int::class.simpleName, "int" -> Int::class
+            Long::class.qualifiedName, Long::class.simpleName, "long" -> Long::class
+            Float::class.qualifiedName, Float::class.simpleName, "float" -> Float::class
+            Double::class.qualifiedName, Double::class.simpleName, "double" -> Double::class
+            Void::class.qualifiedName, Void::class.simpleName, "void" -> Void::class
+            String::class.qualifiedName, String::class.simpleName -> String::class
             else -> null
         }
     }
