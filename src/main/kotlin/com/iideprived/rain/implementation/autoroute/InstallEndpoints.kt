@@ -94,6 +94,8 @@ private fun ClassInfo.installEndpoints(classLoader: ClassLoader, createInstance:
 }
 
 private fun getRouteFunction(classInstance: Any, methodInfo: MethodInfo) : (suspend PipelineContext<Unit, ApplicationCall>.(Unit) -> Unit ) = {
+    val declaringClass = classInstance.javaClass
+    val classLoader = declaringClass.classLoader
     val missingParameters: MutableList<MethodParameterInfo> = mutableListOf()
     val paramValues = methodInfo.parameterInfo.map { param ->
         val paramAnnotations = param.annotationInfo.filter { paramAnnotation ->
@@ -112,7 +114,7 @@ private fun getRouteFunction(classInstance: Any, methodInfo: MethodInfo) : (susp
         try {
             obj = when (paramType.classInfo?.simpleName) {
                 Path::class.simpleName -> call.parameters[paramType.getValue()]?.convertByString(param.simpleType())
-                Body::class.simpleName  -> call.receive(param.toKClass())
+                Body::class.simpleName  -> call.receive(param.toKClass(classLoader))
                 Query::class.simpleName -> call.request.queryParameters[paramType.getValue()]?.convertByString(param.simpleType())
                 Header::class.simpleName -> call.request.headers[paramType.getValue()]?.convertByString(param.simpleType())
                 else -> throw RouteParameterAnnotationMissingException(methodInfo, param)
@@ -138,8 +140,6 @@ private fun getRouteFunction(classInstance: Any, methodInfo: MethodInfo) : (susp
 
     var statusCode = 200
     val response = try {
-        val declaringClass = classInstance.javaClass
-        val classLoader = declaringClass.classLoader
         val method = declaringClass.getDeclaredMethod(methodInfo.name, *methodInfo.parameterInfo.map { it.qualifiedType().toKClass(classLoader)!!.java }.toTypedArray())
         val resultRaw = method.invoke(classInstance, *paramValues)
         val resultTyped: Any? = resultRaw
