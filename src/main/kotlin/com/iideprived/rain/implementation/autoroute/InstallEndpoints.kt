@@ -161,7 +161,13 @@ private fun getRouteFunction(classInstance: Any, methodInfo: MethodInfo) : (susp
                         BaseResponse.failure<GenericResponse>(exception, "INVOCATION_FAILED", 500)
                     }
                     "argument type mismatch" -> {
-                        val exception = Exception("Failed to invoke method ${methodInfo.name} on class ${classInstance::class.qualifiedName}.\n Expected arguments ${methodInfo.parameterInfo.map { it.typeSignatureOrTypeDescriptor.toString() }} and got $paramValues")
+                        val exception = Exception("Expected arguments ${methodInfo.parameterInfo.map { it.typeSignatureOrTypeDescriptor.toStringWithSimpleNames() }}" +
+                                " and got ${paramValues.map { capturedParam -> 
+                                    when(capturedParam) {
+                                        null -> "null"
+                                        else -> capturedParam::class.simpleName
+                                    }
+                                }}")
                         exception.printStackTrace()
                         BaseResponse.failure<GenericResponse>(exception, "ARGUMENT_TYPE_MISMATCH", 500)
                     }
