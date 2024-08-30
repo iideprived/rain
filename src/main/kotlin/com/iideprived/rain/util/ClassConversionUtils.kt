@@ -65,16 +65,16 @@ internal fun String.toKClass(classLoader: ClassLoader = scanResult.javaClass.cla
     }
 }
 
-internal fun MethodParameterInfo.toKClass(): KClass<*> {
-    return this.qualifiedType().toKClass() ?: Any::class
+internal fun MethodParameterInfo.toKClass(classLoader: ClassLoader = scanResult.javaClass.classLoader): KClass<*> {
+    return this.qualifiedType().toKClass(classLoader) ?: Any::class
 }
 
-internal fun MethodParameterInfo.toType(): Type {
-    return scanResult.loadClass(this.qualifiedType(), false)
+internal fun MethodParameterInfo.toType(classLoader: ClassLoader = scanResult.javaClass.classLoader): Type {
+    return classLoader.loadClass(this.qualifiedType())
 }
 
-internal fun MethodParameterInfo.toKType(): KType {
-    val kClass = this.toKClass()
+internal fun MethodParameterInfo.toKType(classLoader: ClassLoader = scanResult.javaClass.classLoader): KType {
+    val kClass = this.toKClass(classLoader)
     return kClass.createType(nullable = true)
 }
 
@@ -107,7 +107,7 @@ internal fun MethodInfo.returnType() : TypeSignature = this.typeSignatureOrTypeD
 
 internal fun MethodInfo.returnsBaseResponse() : Boolean = returnType().toString().implementsInterface(BaseResponse::class) || returnType().toString() == BaseResponse::class.qualifiedName
 
-internal fun MethodParameterInfo.isNullable(): Boolean {
-    val type = this.toKClass().createType(nullable = true)
-    return this.toKClass().createType().isSubtypeOf(type)
+internal fun MethodParameterInfo.isNullable(classLoader: ClassLoader = scanResult.javaClass.classLoader): Boolean {
+    val type = this.toKClass(classLoader).createType(nullable = true)
+    return this.toKClass(classLoader).createType().isSubtypeOf(type)
 }
