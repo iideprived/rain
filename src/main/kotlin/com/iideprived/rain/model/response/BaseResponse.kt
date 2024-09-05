@@ -33,7 +33,7 @@ abstract class BaseResponse {
         return this
     }
 
-    fun asFailure(e: Exception, errorCode: String? = DEFAULT_ERROR_CODE, statusCode: Int = DEFAULT_FAILURE_STATUS_CODE): BaseResponse {
+    fun asFailure(e: Throwable, errorCode: String? = DEFAULT_ERROR_CODE, statusCode: Int = DEFAULT_FAILURE_STATUS_CODE): BaseResponse {
         this.statusCode = statusCode
         this.statusMessage = DEFAULT_FAILURE_STATUS_MESSAGE
         this.errorCode = errorCode
@@ -47,7 +47,7 @@ abstract class BaseResponse {
         const val DEFAULT_FAILURE_STATUS_CODE: Int = 400
         const val DEFAULT_FAILURE_STATUS_MESSAGE: String = "failure"
         const val DEFAULT_SUCCESS_STATUS_MESSAGE: String = "success"
-        const val DEFAULT_ERROR_CODE: String = "ERR-01"
+        const val DEFAULT_ERROR_CODE: String = "ERROR"
 
         // Static Methods
 
@@ -66,12 +66,11 @@ abstract class BaseResponse {
             }
         }
 
-        @Suppress("unused")
         inline fun <reified T : BaseResponse> success(): T {
             return createInstance<T>().asSuccess() as T
         }
 
-        inline fun <reified T : BaseResponse> failure(e: Exception, errorCode: String? = DEFAULT_ERROR_CODE, statusCode: Int = DEFAULT_FAILURE_STATUS_CODE): T {
+        inline fun <reified T : BaseResponse> failure(e: Throwable, errorCode: String? = DEFAULT_ERROR_CODE, statusCode: Int = DEFAULT_FAILURE_STATUS_CODE): T {
             return createInstance<T>().asFailure(e, errorCode, statusCode) as T
         }
     }

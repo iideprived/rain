@@ -30,4 +30,6 @@ internal class UserRouter(private val userService: UserService = UserServiceImpl
 
     @Put("/{id}")
     internal fun updateUserById(@Path("id") id: Int, @Body user: User) = UpdateUserResponse(userService.updateUser(id, user))
+
+
 }
