@@ -47,7 +47,7 @@ abstract class BaseResponse {
         const val DEFAULT_FAILURE_STATUS_CODE: Int = 400
         const val DEFAULT_FAILURE_STATUS_MESSAGE: String = "failure"
         const val DEFAULT_SUCCESS_STATUS_MESSAGE: String = "success"
-        const val DEFAULT_ERROR_CODE: String = "ERR-01"
+        const val DEFAULT_ERROR_CODE: String = "ERROR"
 
         // Static Methods
 
@@ -66,7 +66,6 @@ abstract class BaseResponse {
             }
         }
 
-        @Suppress("unused")
         inline fun <reified T : BaseResponse> success(): T {
             return createInstance<T>().asSuccess() as T
         }
