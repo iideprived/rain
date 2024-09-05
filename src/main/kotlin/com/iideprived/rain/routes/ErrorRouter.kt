@@ -28,9 +28,9 @@ internal class ErrorRouter {
 
     @Post
     internal fun postError(@Body request: ErrorRequest) : GenericResponse = when(request) {
-        ErrorRequest(true, false) -> throw StatusTestException()
-        ErrorRequest(false, true) -> throw ErrorTestException()
-        ErrorRequest(true, true) -> throw ErrorStatusTestException()
+        ErrorRequest(hasStatus = true, hasCode = false) -> throw StatusTestException()
+        ErrorRequest(hasStatus = false, hasCode = true) -> throw ErrorTestException()
+        ErrorRequest(hasStatus = true, hasCode = true) -> throw ErrorStatusTestException()
         else -> throw GenericException()
     }
 }
