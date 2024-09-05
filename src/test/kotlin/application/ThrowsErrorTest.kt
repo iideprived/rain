@@ -64,4 +64,70 @@ class ThrowsErrorTest {
             }
         }
     }
+
+    @Test
+    fun testPostErrorGeneric() {
+        testApplication {
+            client.post("/error") {
+                contentType(ContentType.Application.Json)
+                setBody("""{"hasCode": false, "hasStatus": false}""")
+            }.apply {
+                assertEquals(HttpStatusCode.BadRequest, this.status)
+            }
+        }
+    }
+    @Test
+    fun testPostErrorGenericNull() {
+        testApplication {
+            client.post("/error") {
+                contentType(ContentType.Application.Json)
+                setBody("""{"hasCode": null, "hasStatus": null}""")
+            }.apply {
+                assertEquals(HttpStatusCode.BadRequest, this.status)
+            }
+        }
+    }
+
+    @Test
+    fun testPostErrorStatus() {
+        testApplication {
+            client.post("/error") {
+                contentType(ContentType.Application.Json)
+                setBody("""{"hasCode": false, "hasStatus": true}""")
+            }.apply {
+                assertEquals(HttpStatusCode.Forbidden, this.status)
+                val (errorCode, errorMessage, statusCode) = parseGenericResponse(this)
+                assertEquals(HttpStatusCode.Forbidden.value, statusCode)
+            }
+        }
+    }
+
+    @Test
+    fun testPostErrorCode() {
+        testApplication {
+            client.post("/error") {
+                contentType(ContentType.Application.Json)
+                setBody("""{"hasCode": true, "hasStatus": false}""")
+            }.apply {
+                assertEquals(HttpStatusCode.BadRequest, this.status)
+                val (errorCode, errorMessage, statusCode) = parseGenericResponse(this)
+                assertEquals("TEST_ERROR", errorCode)
+            }
+        }
+    }
+
+    @Test
+    fun testPostErrorCodeAndStatus() {
+        testApplication {
+            client.post("/error") {
+                contentType(ContentType.Application.Json)
+                setBody("""{"hasCode": true, "hasStatus": true}""")
+            }.apply {
+                assertEquals(HttpStatusCode.InternalServerError, this.status)
+                val (errorCode, errorMessage, statusCode) = parseGenericResponse(this)
+                assertEquals("TEST_ERROR_STATUS", errorCode)
+                assertEquals(HttpStatusCode.InternalServerError.value, statusCode)
+            }
+        }
+    }
 }
