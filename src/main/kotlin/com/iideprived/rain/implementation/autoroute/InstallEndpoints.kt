@@ -152,34 +152,8 @@ private fun getRouteFunction(classInstance: Any, methodInfo: MethodInfo) : (susp
             e is ErrorCodeException && e is StatusCodeException -> BaseResponse.failure<GenericResponse>(e, e.errorCode, e.statusCode)
             e is ErrorCodeException -> BaseResponse.failure<GenericResponse>(e, e.errorCode)
             e is StatusCodeException -> BaseResponse.failure<GenericResponse>(e, statusCode = e.statusCode)
-            else -> {
-                e.printStackTrace()
-                when (e.message) {
-                    "object is not an instance of declaring class" -> {
-                        val exception = Exception("Failed to invoke method ${methodInfo.name} on class ${classInstance::class.qualifiedName}")
-                        exception.printStackTrace()
-                        BaseResponse.failure<GenericResponse>(exception, "INVOCATION_FAILED", 500)
-                    }
-                    "argument type mismatch" -> {
-                        val exception = Exception("Expected arguments ${methodInfo.parameterInfo.map { it.typeSignatureOrTypeDescriptor.toStringWithSimpleNames() }}" +
-                                " and got ${paramValues.map { capturedParam -> 
-                                    when(capturedParam) {
-                                        null -> "null"
-                                        else -> capturedParam::class.simpleName
-                                    }
-                                }}")
-                        exception.printStackTrace()
-                        BaseResponse.failure<GenericResponse>(exception, "ARGUMENT_TYPE_MISMATCH", 500)
-                    }
-                    else -> {
-                        e.printStackTrace()
-                        BaseResponse.failure<GenericResponse>(e)
-                    }
-                }
-            }
-        }.apply {
-            statusCode = this.statusCode
-        }
+            else -> BaseResponse.failure<GenericResponse>(e)
+        }.apply { statusCode = this.statusCode }
     }
     call.respond(HttpStatusCode.fromValue(statusCode), response)
 }
