@@ -33,7 +33,7 @@ abstract class BaseResponse {
         return this
     }
 
-    fun asFailure(e: Exception, errorCode: String? = DEFAULT_ERROR_CODE, statusCode: Int = DEFAULT_FAILURE_STATUS_CODE): BaseResponse {
+    fun asFailure(e: Throwable, errorCode: String? = DEFAULT_ERROR_CODE, statusCode: Int = DEFAULT_FAILURE_STATUS_CODE): BaseResponse {
         this.statusCode = statusCode
         this.statusMessage = DEFAULT_FAILURE_STATUS_MESSAGE
         this.errorCode = errorCode
@@ -71,7 +71,7 @@ abstract class BaseResponse {
             return createInstance<T>().asSuccess() as T
         }
 
-        inline fun <reified T : BaseResponse> failure(e: Exception, errorCode: String? = DEFAULT_ERROR_CODE, statusCode: Int = DEFAULT_FAILURE_STATUS_CODE): T {
+        inline fun <reified T : BaseResponse> failure(e: Throwable, errorCode: String? = DEFAULT_ERROR_CODE, statusCode: Int = DEFAULT_FAILURE_STATUS_CODE): T {
             return createInstance<T>().asFailure(e, errorCode, statusCode) as T
         }
     }

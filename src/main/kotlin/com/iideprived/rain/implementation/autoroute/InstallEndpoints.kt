@@ -21,6 +21,7 @@ import io.ktor.util.pipeline.*
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonBuilder
+import java.lang.reflect.InvocationTargetException
 import kotlin.reflect.full.createInstance
 
 @OptIn(ExperimentalSerializationApi::class)
@@ -147,13 +148,17 @@ private fun getRouteFunction(classInstance: Any, methodInfo: MethodInfo) : (susp
             statusCode = resultTyped.statusCode
         }
         resultRaw
-    } catch (e: Exception){
+    } catch (invocationTargetException: InvocationTargetException){
+        val e = invocationTargetException.targetException
         when {
             e is ErrorCodeException && e is StatusCodeException -> BaseResponse.failure<GenericResponse>(e, e.errorCode, e.statusCode)
             e is ErrorCodeException -> BaseResponse.failure<GenericResponse>(e, e.errorCode)
             e is StatusCodeException -> BaseResponse.failure<GenericResponse>(e, statusCode = e.statusCode)
             else -> BaseResponse.failure<GenericResponse>(e)
         }.apply { statusCode = this.statusCode }
+    } catch (e: Exception){
+        // TODO: Add logging
+        BaseResponse.failure<GenericResponse>(e).apply { statusCode = this.statusCode }
     }
     call.respond(HttpStatusCode.fromValue(statusCode), response)
 }
