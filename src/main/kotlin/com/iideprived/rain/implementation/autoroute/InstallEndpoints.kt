@@ -6,10 +6,7 @@ import com.iideprived.rain.exceptions.*
 import com.iideprived.rain.model.response.BaseResponse
 import com.iideprived.rain.model.response.GenericResponse
 import com.iideprived.rain.util.*
-import io.github.classgraph.AnnotationInfo
-import io.github.classgraph.ClassInfo
-import io.github.classgraph.MethodInfo
-import io.github.classgraph.MethodParameterInfo
+import io.github.classgraph.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -41,13 +38,15 @@ fun Application.installServiceAnnotatedRoutes(
     }
     routing {
         getScanResult(classLoader).getClassesWithAnnotation(Service::class.qualifiedName)
-            .filter { classInfo -> !classInfo.packageName.startsWith("com.iideprived.rain") }
+            .filter { classInfo -> isRainInitiated || !classInfo.packageName.startsWith("com.iideprived.rain")  }
             .forEach { classInfo ->
                 val servicePath = classInfo.annotationInfo.firstOrNull()?.parameterValues?.firstOrNull()?.value.toString()
                 route(servicePath, classInfo.installEndpoints(classLoader, createInstance))
             }
     }
 }
+
+internal var isRainInitiated = false
 
 private fun AnnotationInfo.getValue(): String = this.parameterValues.firstOrNull()?.value.toString()
 
