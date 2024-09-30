@@ -73,25 +73,10 @@ fun installPublishing(project: Project) {
         project.publishing {
             publications {
                 create<MavenPublication>("maven") {
-                    from(project.components["java"])
+                    from(project.components["kotlin"])
                     groupId = project.group.toString()
                     artifactId = project.name
                     version = project.version.toString()
-
-                    pom {
-                        name.set(project.name)
-                        description.set("Rain Framework - $project.name")
-                    }
-
-                    repositories {
-                        if (project.name !in skipPublishing) {
-                            maven {
-                                url = uri("https://maven.pkg.jetbrains.space/iideprived/p/rain/maven")
-                            }
-                        } else {
-                            mavenLocal()
-                        }
-                    }
                 }
             }
         }
