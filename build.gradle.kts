@@ -14,7 +14,7 @@ allprojects {
 subprojects {
 
     group = "com.iideprived.rain"
-    version = "1.3.4"
+    version = "1.4.0"
 
     installJvmModule(project)
     installKtorBase(project)
@@ -75,6 +75,12 @@ fun installPublishing(project: Project) {
                     url = uri("https://maven.pkg.jetbrains.space/iideprived/p/rain/maven")
                 }
             }
+        }
+    }
+
+    if (project.name in skipPublishing){
+        project.tasks.jar {
+            archiveBaseName.set(project.name)
         }
     }
 }

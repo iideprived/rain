@@ -6,7 +6,7 @@ import com.iideprived.rain.exceptions.GenericException
 import com.iideprived.rain.exceptions.StatusTestException
 import com.iideprived.rain.model.request.ErrorRequest
 import com.iideprived.rain.routes.ErrorRouter
-import org.junit.Test
+import kotlin.test.Test
 import kotlin.test.assertFailsWith
 
 internal class ErrorRouterTest {
