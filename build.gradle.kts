@@ -1,62 +1,80 @@
-val koin: String by project
 
-
+val skipPublishing = listOf("rain-shared")
 plugins {
     id("maven-publish")
     alias(libs.plugins.kotlin.jvm)
-    alias(libs.plugins.ktor)
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.0.10"
 }
 
-group = "com.iideprived.rain"
-version = "1.3.4"
-
-application {
-    mainClass.set("io.ktor.server.netty.EngineMain")
-
-    val isDevelopment: Boolean = project.ext.has("development")
-    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
-}
-
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    implementation("ch.qos.logback:logback-classic:1.4.12")
-    // Ktor
-    implementation("io.ktor:ktor-server-core-jvm:$ktor")
-    implementation("io.ktor:ktor-server-cors-jvm:$ktor")
-    implementation("io.ktor:ktor-server-netty-jvm:$ktor")
-    implementation("io.ktor:ktor-server-config-yaml:$ktor")
-    implementation("io.ktor:ktor-server-resources-jvm:$ktor")
-    implementation("io.ktor:ktor-serialization-kotlinx-json-jvm:$ktor")
-    implementation("io.ktor:ktor-server-content-negotiation-jvm:$ktor")
-    testImplementation(libs.ktor.server.test.host)
-    testImplementation(libs.kotlin.test.junit)
-
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.8.21") // Reflections
-    implementation("io.github.classgraph:classgraph:4.8.162")
-
-}
-
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            from(components["java"])
-
-            groupId = project.group.toString()
-            artifactId = project.name
-            version = project.version.toString()
-        }
-    }
+allprojects {
     repositories {
-        maven {
-            url = uri("https://maven.pkg.jetbrains.space/iideprived/p/rain/maven")
+        mavenCentral()
+    }
+}
+
+subprojects {
+
+    group = "com.iideprived.rain"
+    version = "1.3.4"
+
+    installJvmModule(project)
+    installKtorBase(project)
+    if (project.name !in skipPublishing) installPublishing(project)
+}
+
+fun installKtorBase(project: Project) {
+    project.plugins.withId("io.ktor.plugin"){
+        project.dependencies {
+            implementation(libs.ktor.server.core)
+            implementation(libs.ktor.server.cors)
+            implementation(libs.ktor.server.netty)
+            implementation(libs.ktor.server.config.yaml)
+            implementation(libs.ktor.server.resources)
+            implementation(libs.ktor.serialization.kotlinx.json)
+            implementation(libs.ktor.server.content.negotiation)
+            testImplementation(libs.ktor.server.test.host)
         }
     }
 }
 
-tasks.named("publishToMavenLocal"){
-    dependsOn(tasks.named("assemble"))
+fun installJvmModule(project: Project) {
+    project.plugins.withId("org.jetbrains.kotlin.jvm") {
+        project.dependencies {
+            if (project.name != "rain-shared") {
+                implementation(project(":rain-shared"))
+            }
+
+            testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:1.8.21")
+            testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.3")
+            testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.3")
+            testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.3")
+        }
+        project.tasks.test {
+            useJUnitPlatform()
+        }
+    }
+}
+
+fun installPublishing(project: Project) {
+    project.plugins.withId("maven-publish") {
+        apply(plugin = "org.jetbrains.kotlin.jvm")
+
+        project.tasks.named("publishToMavenLocal") {
+            dependsOn(project.tasks.named("assemble"))
+        }
+        project.publishing {
+            publications {
+                create<MavenPublication>("maven") {
+                    from(project.components["java"])
+                    groupId = project.group.toString()
+                    artifactId = project.name
+                    version = project.version.toString()
+                }
+            }
+            repositories {
+                maven {
+                    url = uri("https://maven.pkg.jetbrains.space/iideprived/p/rain/maven")
+                }
+            }
+        }
+    }
 }
