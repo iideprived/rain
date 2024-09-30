@@ -1,7 +1,6 @@
 rootProject.name = "com.iideprived.rain"
 
-include("rain-core")
-include("rain-jobs")
+include("rain-core", "rain-jobs", "rain-shared")
 
 dependencyResolutionManagement {
     versionCatalogs {
@@ -40,4 +39,3 @@ dependencyResolutionManagement {
         }
     }
 }
-include("rain-shared")

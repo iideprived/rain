@@ -55,6 +55,12 @@ fun installJvmModule(project: Project) {
 }
 
 fun installPublishing(project: Project) {
+    if (project.name in skipPublishing){
+        project.tasks.jar {
+            archiveBaseName.set(project.name)
+        }
+    }
+
     project.plugins.withId("maven-publish") {
         apply(plugin = "org.jetbrains.kotlin.jvm")
 
@@ -75,12 +81,6 @@ fun installPublishing(project: Project) {
                     url = uri("https://maven.pkg.jetbrains.space/iideprived/p/rain/maven")
                 }
             }
-        }
-    }
-
-    if (project.name in skipPublishing){
-        project.tasks.jar {
-            archiveBaseName.set(project.name)
         }
     }
 }
