@@ -73,6 +73,11 @@ fun installPublishing(project: Project) {
                     groupId = project.group.toString()
                     artifactId = project.name
                     version = project.version.toString()
+
+                    pom {
+                        name.set(project.name)
+                        description.set("Rain Framework - $project.name")
+                    }
                 }
             }
         }
