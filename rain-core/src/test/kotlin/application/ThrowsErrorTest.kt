@@ -1,21 +1,19 @@
 package application
 
-import com.iideprived.rain.autoroute.Rain
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.server.application.*
 import io.ktor.server.testing.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class ThrowsErrorTest {
 
-    val errorCodePattern = "\"errorCode\"\\s*:\\s*\"([^\"]+)\"".toRegex()
-    val errorMessagePattern = "\"errorMessage\"\\s*:\\s*\"([^\"]+)\"".toRegex()
-    val statusCodePattern = "\"statusCode\"\\s*:\\s*(\\d+)".toRegex()
+    private val errorCodePattern = "\"errorCode\"\\s*:\\s*\"([^\"]+)\"".toRegex()
+    private val errorMessagePattern = "\"errorMessage\"\\s*:\\s*\"([^\"]+)\"".toRegex()
+    private val statusCodePattern = "\"statusCode\"\\s*:\\s*(\\d+)".toRegex()
 
-    suspend fun parseGenericResponse(response: HttpResponse): Triple<String, String, Int> {
+    private suspend fun parseGenericResponse(response: HttpResponse): Triple<String, String, Int> {
         val responseBody = response.bodyAsText() // Get the response as a text
         val errorCode = errorCodePattern.find(responseBody)?.groups?.get(1)?.value ?: "UnknownErrorCode"
         val errorMessage = errorMessagePattern.find(responseBody)?.groups?.get(1)?.value ?: "UnknownErrorMessage"
@@ -27,7 +25,6 @@ class ThrowsErrorTest {
     @Test
     fun testErrorEndpoint() {
         testApplication {
-            install(Rain)
             client.get("/error").apply {
                 assertEquals(HttpStatusCode.BadRequest, this.status)
             }
@@ -37,7 +34,6 @@ class ThrowsErrorTest {
     @Test
     fun testErrorCodeEndpoint() {
         testApplication {
-            install(Rain)
             client.get("/error/code").apply {
                 assertEquals(HttpStatusCode.BadRequest, this.status)
                 val (errorCode, _, _) = parseGenericResponse(this)
@@ -49,7 +45,6 @@ class ThrowsErrorTest {
     @Test
     fun testErrorStatusEndpoint() {
         testApplication {
-            install(Rain)
             client.get("/error/status").apply {
                 assertEquals(HttpStatusCode.Forbidden, this.status)
                 val (_, _, statusCode) = parseGenericResponse(this)
@@ -61,7 +56,6 @@ class ThrowsErrorTest {
     @Test
     fun testErrorCodeAndStatusEndpoint() {
         testApplication {
-            install(Rain)
             client.get("/error/codeAndStatus").apply {
                 assertEquals(HttpStatusCode.InternalServerError, this.status)
                 val (errorCode, _, statusCode) = parseGenericResponse(this)
@@ -74,7 +68,6 @@ class ThrowsErrorTest {
     @Test
     fun testPostErrorGeneric() {
         testApplication {
-            install(Rain)
             client.post("/error") {
                 contentType(ContentType.Application.Json)
                 setBody("""{"hasCode": false, "hasStatus": false}""")
@@ -86,7 +79,6 @@ class ThrowsErrorTest {
     @Test
     fun testPostErrorGenericNull() {
         testApplication {
-            install(Rain)
             client.post("/error") {
                 contentType(ContentType.Application.Json)
                 setBody("""{"hasCode": null, "hasStatus": null}""")
@@ -99,7 +91,6 @@ class ThrowsErrorTest {
     @Test
     fun testPostErrorStatus() {
         testApplication {
-            install(Rain)
             client.post("/error") {
                 contentType(ContentType.Application.Json)
                 setBody("""{"hasCode": false, "hasStatus": true}""")
@@ -114,7 +105,6 @@ class ThrowsErrorTest {
     @Test
     fun testPostErrorCode() {
         testApplication {
-            install(Rain)
             client.post("/error") {
                 contentType(ContentType.Application.Json)
                 setBody("""{"hasCode": true, "hasStatus": false}""")
@@ -129,7 +119,6 @@ class ThrowsErrorTest {
     @Test
     fun testPostErrorCodeAndStatus() {
         testApplication {
-            install(Rain)
             client.post("/error") {
                 contentType(ContentType.Application.Json)
                 setBody("""{"hasCode": true, "hasStatus": true}""")
