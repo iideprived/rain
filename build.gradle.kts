@@ -60,34 +60,23 @@ fun installPublishing(project: Project) {
 
     project.plugins.withId("maven-publish") {
         apply(plugin = "org.jetbrains.kotlin.jvm")
-        println("Publishing ${project.name} ${project.version}")
-
 
         project.tasks.named("publishToMavenLocal") {
             dependsOn(project.tasks.named("assemble"))
         }
+
+        java {
+            withSourcesJar()
+            withJavadocJar()
+        }
+
         project.publishing {
             publications {
-                create<MavenPublication>("mavenJava") {
-                    from(project.components["java"])
+                create<MavenPublication>("maven") {
+                    from(project.components["kotlin"])
                     groupId = project.group.toString()
                     artifactId = project.name
                     version = project.version.toString()
-
-                    pom {
-                        name.set(project.name)
-                        description.set("Rain Framework - $project.name")
-                    }
-
-                    repositories {
-                        if (project.name !in skipPublishing) {
-                            maven {
-                                url = uri("https://maven.pkg.jetbrains.space/iideprived/p/rain/maven")
-                            }
-                        } else {
-                            mavenLocal()
-                        }
-                    }
                 }
             }
         }
