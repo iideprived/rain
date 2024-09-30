@@ -14,6 +14,7 @@ application {
 }
 
 dependencies {
+    implementation(project(":rain-shared"))
     implementation(libs.kotlin.reflect)
     implementation(libs.classgraph)
 }
