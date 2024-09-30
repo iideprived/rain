@@ -53,6 +53,27 @@ fun installJvmModule(project: Project) {
         project.tasks.test {
             useJUnitPlatform()
         }
+
+        if (project.name in skipPublishing) {
+            java {
+                toolchain {
+                    languageVersion.set(JavaLanguageVersion.of(17))
+                }
+            }
+
+            tasks.jar {
+                archiveBaseName.set("${project.name}-$version")
+            }
+
+            configurations {
+                all {
+                    attributes.attribute(
+                        org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType.attribute,
+                        org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType.jvm
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -72,7 +93,7 @@ fun installPublishing(project: Project) {
 
         project.publishing {
             publications {
-                create<MavenPublication>("maven") {
+                create<MavenPublication>("mavenJava") {
                     from(project.components["kotlin"])
                     groupId = project.group.toString()
                     artifactId = project.name
