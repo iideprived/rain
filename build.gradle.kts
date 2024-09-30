@@ -1,4 +1,5 @@
 
+val skipPublishing = listOf("rain-shared")
 plugins {
     id("maven-publish")
     alias(libs.plugins.kotlin.jvm)
@@ -17,7 +18,7 @@ subprojects {
 
     installJvmModule(project)
     installKtorBase(project)
-    installPublishing(project)
+    if (project.name !in skipPublishing) installPublishing(project)
 }
 
 fun installKtorBase(project: Project) {
@@ -57,10 +58,6 @@ fun installPublishing(project: Project) {
 
     project.plugins.withId("maven-publish") {
         apply(plugin = "org.jetbrains.kotlin.jvm")
-
-        project.tasks.jar {
-            archiveBaseName.set(project.name)
-        }
 
         project.tasks.named("publishToMavenLocal") {
             dependsOn(project.tasks.named("assemble"))
