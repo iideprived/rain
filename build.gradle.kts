@@ -8,6 +8,8 @@ plugins {
 allprojects {
     repositories {
         mavenCentral()
+        maven(url = "https://maven.pkg.jetbrains.space/iideprived/p/rain/maven")
+        maven(url = "https://jitpack.io")
     }
 }
 
@@ -58,6 +60,8 @@ fun installPublishing(project: Project) {
 
     project.plugins.withId("maven-publish") {
         apply(plugin = "org.jetbrains.kotlin.jvm")
+        println("Publishing ${project.name} ${project.version}")
+
 
         project.tasks.named("publishToMavenLocal") {
             dependsOn(project.tasks.named("assemble"))
@@ -69,11 +73,6 @@ fun installPublishing(project: Project) {
                     groupId = project.group.toString()
                     artifactId = project.name
                     version = project.version.toString()
-                }
-            }
-            repositories {
-                maven {
-                    url = uri("https://maven.pkg.jetbrains.space/iideprived/p/rain/maven")
                 }
             }
         }
