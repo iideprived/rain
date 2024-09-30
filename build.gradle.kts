@@ -80,12 +80,5 @@ fun installPublishing(project: Project) {
                 }
             }
         }
-        project.afterEvaluate {
-            publishing {
-                publications {
-
-                }
-            }
-        }
     }
 }
