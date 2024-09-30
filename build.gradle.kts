@@ -20,7 +20,7 @@ subprojects {
 
     installJvmModule(project)
     installKtorBase(project)
-    if (project.name !in skipPublishing) installPublishing(project)
+    installPublishing(project)
 }
 
 fun installKtorBase(project: Project) {
@@ -68,7 +68,7 @@ fun installPublishing(project: Project) {
         }
         project.publishing {
             publications {
-                create<MavenPublication>("maven") {
+                create<MavenPublication>("mavenJava") {
                     from(project.components["java"])
                     groupId = project.group.toString()
                     artifactId = project.name
@@ -77,6 +77,16 @@ fun installPublishing(project: Project) {
                     pom {
                         name.set(project.name)
                         description.set("Rain Framework - $project.name")
+                    }
+
+                    repositories {
+                        if (project.name !in skipPublishing) {
+                            maven {
+                                url = uri("https://maven.pkg.jetbrains.space/iideprived/p/rain/maven")
+                            }
+                        } else {
+                            mavenLocal()
+                        }
                     }
                 }
             }

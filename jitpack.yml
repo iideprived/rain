@@ -3,4 +3,4 @@ jdk:
 install:
   - echo "Building Rain - Routing Automatically Inferred "
   - chmod +x gradlew
-  - ./gradlew clean check :rain-shared:jar :rain-core:publishToMavenLocal :rain-jobs:publishToMavenLocal
+  - ./gradlew clean build publishToMavenLocal
