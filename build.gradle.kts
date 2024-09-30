@@ -60,15 +60,19 @@ fun installPublishing(project: Project) {
 
     project.plugins.withId("maven-publish") {
         apply(plugin = "org.jetbrains.kotlin.jvm")
-        println("Publishing ${project.name} ${project.version}")
-
 
         project.tasks.named("publishToMavenLocal") {
             dependsOn(project.tasks.named("assemble"))
         }
+
+        java {
+            withSourcesJar()
+            withJavadocJar()
+        }
+
         project.publishing {
             publications {
-                create<MavenPublication>("mavenJava") {
+                create<MavenPublication>("maven") {
                     from(project.components["java"])
                     groupId = project.group.toString()
                     artifactId = project.name
