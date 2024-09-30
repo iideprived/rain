@@ -8,6 +8,8 @@ plugins {
 allprojects {
     repositories {
         mavenCentral()
+        maven(url = "https://maven.pkg.jetbrains.space/iideprived/p/rain/maven")
+        maven(url = "https://jitpack.io")
     }
 }
 
@@ -18,7 +20,7 @@ subprojects {
 
     installJvmModule(project)
     installKtorBase(project)
-    if (project.name !in skipPublishing) installPublishing(project)
+    installPublishing(project)
 }
 
 fun installKtorBase(project: Project) {
@@ -58,22 +60,34 @@ fun installPublishing(project: Project) {
 
     project.plugins.withId("maven-publish") {
         apply(plugin = "org.jetbrains.kotlin.jvm")
+        println("Publishing ${project.name} ${project.version}")
+
 
         project.tasks.named("publishToMavenLocal") {
             dependsOn(project.tasks.named("assemble"))
         }
         project.publishing {
             publications {
-                create<MavenPublication>("maven") {
+                create<MavenPublication>("mavenJava") {
                     from(project.components["java"])
                     groupId = project.group.toString()
                     artifactId = project.name
                     version = project.version.toString()
-                }
-            }
-            repositories {
-                maven {
-                    url = uri("https://maven.pkg.jetbrains.space/iideprived/p/rain/maven")
+
+                    pom {
+                        name.set(project.name)
+                        description.set("Rain Framework - $project.name")
+                    }
+
+                    repositories {
+                        if (project.name !in skipPublishing) {
+                            maven {
+                                url = uri("https://maven.pkg.jetbrains.space/iideprived/p/rain/maven")
+                            }
+                        } else {
+                            mavenLocal()
+                        }
+                    }
                 }
             }
         }
