@@ -72,11 +72,18 @@ fun installPublishing(project: Project) {
 
         project.publishing {
             publications {
-                create<MavenPublication>("maven") {
+                create<MavenPublication>("mavenJava") {
                     from(project.components["kotlin"])
                     groupId = project.group.toString()
                     artifactId = project.name
                     version = project.version.toString()
+                }
+            }
+        }
+        project.afterEvaluate {
+            publishing {
+                publications {
+
                 }
             }
         }
