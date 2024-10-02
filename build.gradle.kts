@@ -100,6 +100,11 @@ fun installPublishing(project: Project) {
                     version = project.version.toString()
                 }
             }
+            if (project.name in skipPublishing){
+                repositories {
+                    mavenLocal()
+                }
+            }
         }
     }
 }
