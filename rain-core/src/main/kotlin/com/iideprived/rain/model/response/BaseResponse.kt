@@ -19,7 +19,6 @@ abstract class BaseResponse {
     var errorMessage: String? = null
         private set
 
-
     init {
         this.asSuccess()
     }
