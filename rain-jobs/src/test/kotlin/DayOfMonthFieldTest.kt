@@ -1,7 +1,7 @@
 package model.jobs
 
-import com.iideprived.rain.model.jobs.CronField
-import com.iideprived.rain.model.jobs.DayOfMonthField
+import com.iideprived.rain.model.jobs.com.iideprived.rain.jobs.CronField
+import com.iideprived.rain.model.jobs.com.iideprived.rain.jobs.DayOfMonthField
 import java.util.stream.Stream
 
 class DayOfMonthFieldTest : CronFieldTest() {

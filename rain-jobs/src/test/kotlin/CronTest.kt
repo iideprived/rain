@@ -1,7 +1,7 @@
 package model.jobs
 
 import com.iideprived.rain.implementation.jobs.Timezone
-import com.iideprived.rain.model.jobs.Cron
+import com.iideprived.rain.model.jobs.com.iideprived.rain.jobs.Cron
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test

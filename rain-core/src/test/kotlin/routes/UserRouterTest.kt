@@ -1,9 +1,9 @@
 package routes
 
-import com.iideprived.rain.model.User
-import com.iideprived.rain.routes.UserRouter
-import com.iideprived.rain.service.UserService
-import com.iideprived.rain.service.impl.UserServiceImpl
+import com.iideprived.rain.core.model.User
+import com.iideprived.rain.core.routes.UserRouter
+import com.iideprived.rain.core.service.UserService
+import com.iideprived.rain.core.service.impl.UserServiceImpl
 import kotlin.test.Test
 
 internal class UserRouterTest {

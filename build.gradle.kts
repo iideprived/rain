@@ -16,7 +16,7 @@ allprojects {
 subprojects {
 
     group = "com.iideprived.rain"
-    version = "1.4.0"
+    version = "1.4.10"
 
     installJvmModule(project)
     installKtorBase(project)
@@ -28,9 +28,6 @@ fun installKtorBase(project: Project) {
         project.dependencies {
             implementation(libs.ktor.server.core)
             implementation(libs.ktor.server.cors)
-            implementation(libs.ktor.server.netty)
-            implementation(libs.ktor.server.config.yaml)
-            implementation(libs.ktor.server.resources)
             implementation(libs.ktor.serialization.kotlinx.json)
             implementation(libs.ktor.server.content.negotiation)
             testImplementation(libs.ktor.server.test.host)

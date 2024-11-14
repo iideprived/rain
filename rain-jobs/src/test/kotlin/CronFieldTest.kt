@@ -1,6 +1,6 @@
 package model.jobs
 
-import com.iideprived.rain.model.jobs.CronField
+import com.iideprived.rain.model.jobs.com.iideprived.rain.jobs.CronField
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
