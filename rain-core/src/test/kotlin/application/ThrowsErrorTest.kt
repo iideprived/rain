@@ -1,5 +1,6 @@
 package application
 
+import com.iideprived.rain.core.module
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -25,6 +26,7 @@ class ThrowsErrorTest {
     @Test
     fun testErrorEndpoint() {
         testApplication {
+            application { module() }
             client.get("/error").apply {
                 assertEquals(HttpStatusCode.BadRequest, this.status)
             }
@@ -34,6 +36,7 @@ class ThrowsErrorTest {
     @Test
     fun testErrorCodeEndpoint() {
         testApplication {
+            application { module() }
             client.get("/error/code").apply {
                 assertEquals(HttpStatusCode.BadRequest, this.status)
                 val (errorCode, _, _) = parseGenericResponse(this)
@@ -45,6 +48,7 @@ class ThrowsErrorTest {
     @Test
     fun testErrorStatusEndpoint() {
         testApplication {
+            application { module() }
             client.get("/error/status").apply {
                 assertEquals(HttpStatusCode.Forbidden, this.status)
                 val (_, _, statusCode) = parseGenericResponse(this)
@@ -56,6 +60,7 @@ class ThrowsErrorTest {
     @Test
     fun testErrorCodeAndStatusEndpoint() {
         testApplication {
+            application { module() }
             client.get("/error/codeAndStatus").apply {
                 assertEquals(HttpStatusCode.InternalServerError, this.status)
                 val (errorCode, _, statusCode) = parseGenericResponse(this)
@@ -68,6 +73,7 @@ class ThrowsErrorTest {
     @Test
     fun testPostErrorGeneric() {
         testApplication {
+            application { module() }
             client.post("/error") {
                 contentType(ContentType.Application.Json)
                 setBody("""{"hasCode": false, "hasStatus": false}""")
@@ -79,6 +85,7 @@ class ThrowsErrorTest {
     @Test
     fun testPostErrorGenericNull() {
         testApplication {
+            application { module() }
             client.post("/error") {
                 contentType(ContentType.Application.Json)
                 setBody("""{"hasCode": null, "hasStatus": null}""")
@@ -91,6 +98,7 @@ class ThrowsErrorTest {
     @Test
     fun testPostErrorStatus() {
         testApplication {
+            application { module() }
             client.post("/error") {
                 contentType(ContentType.Application.Json)
                 setBody("""{"hasCode": false, "hasStatus": true}""")
@@ -105,6 +113,7 @@ class ThrowsErrorTest {
     @Test
     fun testPostErrorCode() {
         testApplication {
+            application { module() }
             client.post("/error") {
                 contentType(ContentType.Application.Json)
                 setBody("""{"hasCode": true, "hasStatus": false}""")
@@ -119,6 +128,7 @@ class ThrowsErrorTest {
     @Test
     fun testPostErrorCodeAndStatus() {
         testApplication {
+            application { module() }
             client.post("/error") {
                 contentType(ContentType.Application.Json)
                 setBody("""{"hasCode": true, "hasStatus": true}""")

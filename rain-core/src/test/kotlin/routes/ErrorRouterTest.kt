@@ -1,11 +1,7 @@
 package routes
 
-import com.iideprived.rain.exceptions.ErrorStatusTestException
-import com.iideprived.rain.exceptions.ErrorTestException
-import com.iideprived.rain.exceptions.GenericException
-import com.iideprived.rain.exceptions.StatusTestException
-import com.iideprived.rain.model.request.ErrorRequest
-import com.iideprived.rain.routes.ErrorRouter
+import com.iideprived.rain.core.model.request.ErrorRequest
+import com.iideprived.rain.core.routes.ErrorRouter
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 
@@ -14,41 +10,41 @@ internal class ErrorRouterTest {
 
     @Test
     fun testGetError() {
-        assertFailsWith<GenericException> { errorRouter.getError() }
+        assertFailsWith<com.iideprived.rain.core.exceptions.GenericException> { errorRouter.getError() }
     }
 
     @Test
     fun testGetErrorCode() {
-        assertFailsWith<ErrorTestException> { errorRouter.getErrorCode() }
+        assertFailsWith<com.iideprived.rain.core.exceptions.ErrorTestException> { errorRouter.getErrorCode() }
     }
 
     @Test
     fun testGetErrorStatus() {
-        assertFailsWith<StatusTestException> { errorRouter.getErrorStatus() }
+        assertFailsWith<com.iideprived.rain.core.exceptions.StatusTestException> { errorRouter.getErrorStatus() }
     }
 
     @Test
     fun testGetErrorCodeAndStatus() {
-        assertFailsWith<ErrorStatusTestException> { errorRouter.getErrorCodeAndStatus() }
+        assertFailsWith<com.iideprived.rain.core.exceptions.ErrorStatusTestException> { errorRouter.getErrorCodeAndStatus() }
     }
 
     @Test
     fun testPostErrorGeneric() {
-        assertFailsWith<GenericException> { errorRouter.postError(ErrorRequest(hasStatus = false, hasCode = false)) }
+        assertFailsWith<com.iideprived.rain.core.exceptions.GenericException> { errorRouter.postError(ErrorRequest(hasStatus = false, hasCode = false)) }
     }
 
     @Test
     fun testPostErrorStatus() {
-        assertFailsWith<StatusTestException> { errorRouter.postError(ErrorRequest(hasStatus = true, hasCode = false)) }
+        assertFailsWith<com.iideprived.rain.core.exceptions.StatusTestException> { errorRouter.postError(ErrorRequest(hasStatus = true, hasCode = false)) }
     }
 
     @Test
     fun testPostErrorCode() {
-        assertFailsWith<ErrorTestException> { errorRouter.postError(ErrorRequest(hasStatus = false, hasCode = true)) }
+        assertFailsWith<com.iideprived.rain.core.exceptions.ErrorTestException> { errorRouter.postError(ErrorRequest(hasStatus = false, hasCode = true)) }
     }
 
     @Test
     fun testPostErrorCodeAndStatus() {
-        assertFailsWith<ErrorStatusTestException> { errorRouter.postError(ErrorRequest(hasStatus = true, hasCode = true)) }
+        assertFailsWith<com.iideprived.rain.core.exceptions.ErrorStatusTestException> { errorRouter.postError(ErrorRequest(hasStatus = true, hasCode = true)) }
     }
 }

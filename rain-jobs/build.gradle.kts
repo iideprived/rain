@@ -4,6 +4,8 @@ plugins {
     id("maven-publish")
     alias(libs.plugins.ktor)
     alias(libs.plugins.kotlin.serialization)
+    `java-library`
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 dependencies {
@@ -11,4 +13,17 @@ dependencies {
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.kotlin.reflect)
     implementation(libs.classgraph)
+}
+
+application {
+    mainClass = "com.iideprived.rain.jobs.MainKt"
+}
+
+tasks {
+    shadowJar {
+        archiveClassifier.set("")
+    }
+    build {
+        dependsOn(shadowJar)
+    }
 }
