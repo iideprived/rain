@@ -5,7 +5,7 @@ import com.iideprived.rain.model.jobs.annotations.jobs.Schedule
 import com.iideprived.rain.implementation.jobs.Timezone
 
 @Job
-class TestJob {
+internal class TestJob {
 
     private val messages = listOf(
         "Hello, world!",
