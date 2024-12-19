@@ -111,11 +111,13 @@ fun installPublishing(project: Project) {
             } else {
                 repositories {
                     maven {
+                        val user = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_USER")
+                        val key = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_PUBLISHING_TOKEN")
                         name = "GitHubPackages"
-                        url = uri("https://maven.pkg.github.com/iideprived/${project.name}")
+                        url = uri("https://maven.pkg.github.com/$user/${project.name}")
                         credentials {
-                            username = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_USER")
-                            password = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_TOKEN")
+                            username = user
+                            password = key
                         }
                     }
                 }
