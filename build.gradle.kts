@@ -96,10 +96,28 @@ fun installPublishing(project: Project) {
                     artifactId = project.name
                     version = project.version.toString()
                 }
+                create<MavenPublication>("gpr") {
+                    groupId = "com.github.iideprived"
+                    artifactId = project.name
+                    version = project.version.toString()
+
+                    from(project.components["kotlin"])
+                }
             }
             if (project.name in skipPublishing){
                 repositories {
                     mavenLocal()
+                }
+            } else {
+                repositories {
+                    maven {
+                        name = "GitHubPackages"
+                        url = uri("https://maven.pkg.github.com/iideprived/${project.name}")
+                        credentials {
+                            username = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_USER")
+                            password = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_TOKEN")
+                        }
+                    }
                 }
             }
         }
