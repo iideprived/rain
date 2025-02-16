@@ -96,31 +96,31 @@ fun installPublishing(project: Project) {
                     artifactId = project.name
                     version = project.version.toString()
                 }
-//                create<MavenPublication>("gpr") {
-//                    groupId = "com.github.iideprived"
-//                    artifactId = project.name
-//                    version = project.version.toString()
-//
-//                    from(project.components["kotlin"])
-//                }
+                create<MavenPublication>("gpr") {
+                    groupId = "com.github.iideprived"
+                    artifactId = project.name
+                    version = project.version.toString()
+
+                    from(project.components["kotlin"])
+                }
             }
             if (project.name in skipPublishing){
                 repositories {
                     mavenLocal()
                 }
             } else {
-//                repositories {
-//                    maven {
-//                        val user = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_USER")
-//                        val key = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_PUBLISHING_TOKEN")
-//                        name = "GitHubPackages"
-//                        url = uri("https://maven.pkg.github.com/$user/${project.name}")
-//                        credentials {
-//                            username = user
-//                            password = key
-//                        }
-//                    }
-//                }
+                repositories {
+                    maven {
+                        val user = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_USER")
+                        val key = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_PUBLISHING_TOKEN")
+                        name = "GitHubPackages"
+                        url = uri("https://maven.pkg.github.com/$user/${project.name}")
+                        credentials {
+                            username = user
+                            password = key
+                        }
+                    }
+                }
             }
         }
     }
