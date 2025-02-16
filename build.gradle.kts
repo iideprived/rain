@@ -78,47 +78,34 @@ fun installPublishing(project: Project) {
 
     project.plugins.withId("maven-publish") {
         apply(plugin = "org.jetbrains.kotlin.jvm")
-
         project.tasks.named("publishToMavenLocal") {
             dependsOn(project.tasks.named("assemble"))
         }
-
         java {
             withSourcesJar()
             withJavadocJar()
         }
-
         project.publishing {
             publications {
-                create<MavenPublication>("mavenJava") {
-                    from(project.components["kotlin"])
-                    groupId = project.group.toString()
-                    artifactId = project.name
-                    version = project.version.toString()
-                }
-                create<MavenPublication>("gpr") {
-                    groupId = "com.github.iideprived"
-                    artifactId = project.name
-                    version = project.version.toString()
-
-                    from(project.components["kotlin"])
-                }
-            }
-            if (project.name in skipPublishing){
-                repositories {
-                    mavenLocal()
-                }
-            } else {
-                repositories {
-                    maven {
-                        val user = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_USER")
-                        val key = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_PUBLISHING_TOKEN")
-                        name = "GitHubPackages"
-                        url = uri("https://maven.pkg.github.com/$user/${project.name}")
-                        credentials {
-                            username = user
-                            password = key
-                        }
+                if (project.name in skipPublishing) { // For skipPublishing projects, only one publication is created
+                    create<MavenPublication>("mavenJava") {
+                        from(project.components["kotlin"])
+                        groupId = project.group.toString()
+                        artifactId = project.name
+                        version = project.version.toString()
+                    }
+                } else { // For others, create both publications
+                    create<MavenPublication>("mavenJava") {
+                        from(project.components["kotlin"])
+                        groupId = project.group.toString()
+                        artifactId = project.name
+                        version = project.version.toString()
+                    }
+                    create<MavenPublication>("gpr") {
+                        groupId = "com.github.iideprived"
+                        artifactId = project.name
+                        version = project.version.toString()
+                        from(project.components["kotlin"])
                     }
                 }
             }
