@@ -16,7 +16,7 @@ allprojects {
 subprojects {
 
     group = "com.iideprived.rain"
-    version = "1.4.12"
+    version = "1.4.15"
 
     installJvmModule(project)
     installKtorBase(project)
@@ -85,6 +85,7 @@ fun installPublishing(project: Project) {
             withSourcesJar()
             withJavadocJar()
         }
+
         project.publishing {
             publications {
                 if (project.name in skipPublishing) { // For skipPublishing projects, only one publication is created
@@ -94,13 +95,7 @@ fun installPublishing(project: Project) {
                         artifactId = project.name
                         version = project.version.toString()
                     }
-                } else { // For others, create both publications
-                    create<MavenPublication>("mavenJava") {
-                        from(project.components["kotlin"])
-                        groupId = project.group.toString()
-                        artifactId = project.name
-                        version = project.version.toString()
-                    }
+                } else { //
                     create<MavenPublication>("gpr") {
                         groupId = "com.github.iideprived"
                         artifactId = project.name
