@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.iideprived</groupId>
     <artifactId>rain</artifactId>
-    <version>1.4.10</version>
+    <version>1.4.12</version>
     <packaging>jar</packaging>
     <!-- ... other configurations ... -->
 
