@@ -17,8 +17,9 @@ internal open class RouteInstallationException : Exception() {
 internal class RouteMethodReturnTypeException(private val methodInfo: MethodInfo) : RouteInstallationException() {
     override val message: String
         get() = "${methodInfo.classInfo.simpleName}.${methodInfo.name} " +
-                "must return a subclass of BaseResponse. Instead it returns " +
-                "${methodInfo.typeSignatureOrTypeDescriptor.resultType}"
+                "must return a subclass of ControlledResponse. Instead it returns " +
+                methodInfo.typeSignatureOrTypeDescriptor.resultType.toStringWithSimpleNames() +
+                " from ${methodInfo.classInfo.simpleName}"
 }
 
 internal class RouteParameterAnnotationMissingException(private val methodInfo: MethodInfo, private val paramInfo: MethodParameterInfo) : RouteInstallationException() {

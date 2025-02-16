@@ -97,9 +97,11 @@ fun String.isPrimitiveTypeOrString(): Boolean = when {
 }
 
 fun String.implementsInterface(clazzInterface: KClass<*>) : Boolean {
-    return scanResult.getClassInfo(this)
-        .superclasses
-        .any { it.name == clazzInterface.qualifiedName }
+    val classInfo = scanResult.getClassInfo(this)
+    val superclasses = classInfo?.superclasses
+    val isSubclass = superclasses?.any { it.name == clazzInterface.qualifiedName } ?: false
+
+    return isSubclass
 }
 
 fun MethodInfo.returnType() : TypeSignature = this.typeSignatureOrTypeDescriptor.resultType

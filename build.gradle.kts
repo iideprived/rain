@@ -16,7 +16,7 @@ allprojects {
 subprojects {
 
     group = "com.iideprived.rain"
-    version = "1.4.10"
+    version = "1.4.12"
 
     installJvmModule(project)
     installKtorBase(project)

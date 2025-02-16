@@ -76,4 +76,5 @@ abstract class BaseResponse {
                 .asFailure(e, errorCode, statusCode) as T
         }
     }
+
 }
