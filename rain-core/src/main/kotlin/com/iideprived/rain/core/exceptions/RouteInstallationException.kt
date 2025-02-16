@@ -1,0 +1,54 @@
+package com.iideprived.rain.core.exceptions
+
+import com.iideprived.rain.core.annotations.routing.httpmethod.HttpMethod
+import com.iideprived.rain.core.annotations.routing.request.Body
+import com.iideprived.rain.core.annotations.routing.request.Header
+import com.iideprived.rain.core.annotations.routing.request.Path
+import com.iideprived.rain.core.annotations.routing.request.RequestParameter
+import io.github.classgraph.MethodInfo
+import io.github.classgraph.MethodParameterInfo
+import util.simpleType
+
+internal open class RouteInstallationException : Exception() {
+    override val message: String
+        get() = "Failed to install route"
+}
+
+internal class RouteMethodReturnTypeException(private val methodInfo: MethodInfo) : RouteInstallationException() {
+    override val message: String
+        get() = "${methodInfo.classInfo.simpleName}.${methodInfo.name} " +
+                "must return a subclass of ControlledResponse. Instead it returns " +
+                methodInfo.typeSignatureOrTypeDescriptor.resultType.toStringWithSimpleNames() +
+                " from ${methodInfo.classInfo.simpleName}"
+}
+
+internal class RouteParameterAnnotationMissingException(private val methodInfo: MethodInfo, private val paramInfo: MethodParameterInfo) : RouteInstallationException() {
+    override val message: String
+        get() = "${methodInfo.classInfo.simpleName}.${methodInfo.name} " +
+                " parameter ${paramInfo.name} must be annotated with " +
+                "@${Path::class.simpleName}, @${Body::class.simpleName}, @${com.iideprived.rain.core.annotations.routing.request.Query::class.simpleName}, or @${Header::class.simpleName}"
+}
+
+internal class RouteParameterMultipleAnnotationException(private val methodInfo: MethodInfo, private val paramInfo: MethodParameterInfo) : RouteInstallationException() {
+    private val requestParameterAnnotations = paramInfo.annotationInfo.filter { paramAnnotation ->
+        paramAnnotation.classInfo.annotations.any { it.name == RequestParameter::class.qualifiedName }
+    }.map { "@${it.classInfo.simpleName}" }
+    override val message: String
+        get() = "${methodInfo.classInfo.simpleName}.${methodInfo.name} " +
+                " parameter ${paramInfo.name} cannot have multiple ${RequestParameter::class.simpleName} annotations. It has [$requestParameterAnnotations]"
+}
+
+internal class RouteMethodMultipleHttpMethodAnnotationException(private val methodInfo: MethodInfo) : RouteInstallationException() {
+    private val httpMethodAnnotations = methodInfo.annotationInfo.filter { annotation ->
+        annotation.classInfo.annotations.any { it.name == HttpMethod::class.qualifiedName }
+    }.map { "@${it.classInfo.simpleName}" }
+    override val message: String
+        get() = "${methodInfo.classInfo.simpleName}.${methodInfo.name} " +
+                " cannot have multiple ${HttpMethod::class.simpleName} annotations. It has [$httpMethodAnnotations]"
+}
+
+internal class RouteParameterMissingException(private val methodInfo: MethodInfo, private val missing: List<MethodParameterInfo>) : RouteInstallationException() {
+    override val message: String
+        get() = "${methodInfo.classInfo.simpleName}.${methodInfo.name} " +
+                " is missing parameters: ${missing.joinToString { "${it.name}: ${it.simpleType()}" }}"
+}
