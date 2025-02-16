@@ -1,23 +1,28 @@
-package com.iideprived.rain.routes
+package com.iideprived.rain.core.routes
 
-import com.iideprived.rain.annotations.routing.Service
-import com.iideprived.rain.annotations.routing.httpmethod.Get
-import com.iideprived.rain.model.User
-import com.iideprived.rain.model.response.*
-import com.iideprived.rain.model.response.UpdateUserResponse
+import com.iideprived.rain.core.annotations.routing.Service
+import com.iideprived.rain.core.annotations.routing.httpmethod.Get
+import com.iideprived.rain.core.model.User
+import com.iideprived.rain.core.model.response.*
+import com.iideprived.rain.core.model.response.UpdateUserResponse
 import io.ktor.util.*
+
 
 @Service("/response")
 internal class ResponseSchemaRouter {
 
 
-    @Get("/")
-    fun getJsonGenericGenericResponse(): JsonResponse<UpdateUserResponse> =
-        JsonResponse(UpdateUserResponse(User(
+    @Get("/json")
+    fun getJsonGenericResponse(): JsonResponse<UpdateUserResponse> =
+        JsonResponse(
+            UpdateUserResponse(
+                User(
             id = 5,
             name = "John Doe",
             email = "john.doe@email.com"
-        )))
+        )
+            )
+        )
 
     @Get("/text")
     fun getTextResponse(): TextResponse {
@@ -31,7 +36,7 @@ internal class ResponseSchemaRouter {
 
     @Get("/pdf")
     fun getPdfResponse(): PdfResponse {
-        return PdfResponse("PDF content goes here".decodeBase64Bytes())
+        return PdfResponse("PDF content goes here".encodeToByteArray())
     }
 
 }

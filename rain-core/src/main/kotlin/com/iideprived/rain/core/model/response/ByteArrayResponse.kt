@@ -1,4 +1,4 @@
-package com.iideprived.rain.model.response
+package com.iideprived.rain.core.model.response
 
 class ByteArrayResponse(
     override val body: ByteArray,

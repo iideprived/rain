@@ -1,9 +1,8 @@
 package com.iideprived.rain.core.util
 
 import com.iideprived.rain.core.model.response.BaseResponse
-import com.iideprived.rain.model.response.BaseResponse
-import com.iideprived.rain.model.response.ControlledResponse
-import com.iideprived.rain.model.response.JsonResponse
+import com.iideprived.rain.core.model.response.ControlledResponse
+import com.iideprived.rain.core.model.response.JsonResponse
 import io.github.classgraph.MethodInfo
 import util.implementsInterface
 import util.returnType
