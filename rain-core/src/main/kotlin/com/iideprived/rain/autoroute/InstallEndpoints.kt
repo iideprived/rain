@@ -5,6 +5,7 @@ import com.iideprived.rain.annotations.routing.httpmethod.HttpMethod
 import com.iideprived.rain.annotations.routing.request.*
 import com.iideprived.rain.exceptions.*
 import com.iideprived.rain.model.response.BaseResponse
+import com.iideprived.rain.model.response.ControlledResponse
 import com.iideprived.rain.model.response.GenericResponse
 import com.iideprived.rain.util.*
 import io.github.classgraph.AnnotationInfo
@@ -26,7 +27,9 @@ private fun AnnotationInfo.getValue(): String = this.parameterValues.firstOrNull
 internal fun ClassInfo.installEndpoints(classLoader: ClassLoader, createInstance: (Class<*>) -> Any) : (Route.() -> Unit) = {
     val classInstance = createInstance(classLoader.loadClass(this@installEndpoints.name))
     declaredMethodInfo.forEach findingMethods@{ methodInfo ->
-        if (!methodInfo.returnsBaseResponse()) {
+        val isControlled = methodInfo.returnsControlledResponse()
+        val isBase = methodInfo.returnsBaseResponse()
+        if (!isControlled && !isBase) {
             throw RouteMethodReturnTypeException(methodInfo)
         }
 
@@ -113,28 +116,37 @@ private fun getRouteFunction(classInstance: Any, methodInfo: MethodInfo) : (susp
 
     var statusCode = 200
     val response = try {
-        val method = declaringClass.getDeclaredMethod(
-            methodInfo.name,
-            *methodInfo.parameterInfo.map { it.toKClass(classLoader).java }.toTypedArray())
+            val method = declaringClass.getDeclaredMethod(
+                methodInfo.name,
+                *methodInfo.parameterInfo.map { it.toKClass(classLoader).java }.toTypedArray())
 
-        val resultRaw = method.invoke(classInstance, *paramValues)
-        val resultTyped: Any? = resultRaw
-        if (resultTyped is BaseResponse){
-            statusCode = resultTyped.statusCode
+            var resultRaw = method.invoke(classInstance, *paramValues)
+            val resultTyped: Any? = resultRaw
+            if (resultTyped is BaseResponse){
+                statusCode = resultTyped.statusCode
+            } else if (resultTyped is ControlledResponse<*>){
+                call.response.status(resultTyped.status)
+                statusCode = resultTyped.status.value
+                resultTyped.headers.forEach({ (k, v) ->
+                    call.response.headers.append(k, v)
+                })
+                resultRaw = resultTyped.body
+                call.response.headers.append(HttpHeaders.ContentType, resultTyped.contentType)
+            }
+            resultRaw
+        } catch (invocationTargetException: InvocationTargetException){
+            val e = invocationTargetException.targetException
+            when {
+                e is ErrorCodeException && e is StatusCodeException -> BaseResponse.failure<GenericResponse>(e, e.errorCode, e.statusCode)
+                e is ErrorCodeException -> BaseResponse.failure<GenericResponse>(e, e.errorCode)
+                e is StatusCodeException -> BaseResponse.failure<GenericResponse>(e, statusCode = e.statusCode)
+                else -> BaseResponse.failure<GenericResponse>(e)
+            }.apply { statusCode = this.statusCode }
+        } catch (e: Exception){
+            BaseResponse.failure<GenericResponse>(e).apply { statusCode = this.statusCode }
         }
-        resultRaw
-    } catch (invocationTargetException: InvocationTargetException){
-        val e = invocationTargetException.targetException
-        when {
-            e is ErrorCodeException && e is StatusCodeException -> BaseResponse.failure<GenericResponse>(e, e.errorCode, e.statusCode)
-            e is ErrorCodeException -> BaseResponse.failure<GenericResponse>(e, e.errorCode)
-            e is StatusCodeException -> BaseResponse.failure<GenericResponse>(e, statusCode = e.statusCode)
-            else -> BaseResponse.failure<GenericResponse>(e)
-        }.apply { statusCode = this.statusCode }
-    } catch (e: Exception){
-        // TODO: Add logging
-        BaseResponse.failure<GenericResponse>(e).apply { statusCode = this.statusCode }
-    }
+
+
     call.respond(HttpStatusCode.fromValue(statusCode), response)
 }
 

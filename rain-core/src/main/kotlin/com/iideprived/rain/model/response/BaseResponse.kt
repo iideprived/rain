@@ -19,7 +19,6 @@ abstract class BaseResponse {
     var errorMessage: String? = null
         private set
 
-
     init {
         this.asSuccess()
     }
@@ -74,4 +73,5 @@ abstract class BaseResponse {
             return createInstance<T>().asFailure(e, errorCode, statusCode) as T
         }
     }
+
 }
